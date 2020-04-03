@@ -16,9 +16,17 @@ defineMode("sasm", (config) => {
         }),
         copyState: (v) => Object.assign({}, v),
         token(stream, state) {
-            if (stream.match(/^\/\*/)) {
-                state.blockComment = true
-                return "comment"
+            if (state.string) {
+                if (stream.match(/^\\(["n]|[\da-fA-F]{2})/)) {
+                    
+                } else if (stream.match("\"")) {
+                    state.string = false
+                } else stream.next()
+                return "string"
+            }
+            if (stream.match("\"")) {
+                state.string = true
+                return "string"
             }
             if (state.blockComment) {
                 if (stream.match(/^\*\//)) {
@@ -26,6 +34,10 @@ defineMode("sasm", (config) => {
                 } else {
                     stream.next()
                 }
+                return "comment"
+            }
+            if (stream.match(/^\/\*/)) {
+                state.blockComment = true
                 return "comment"
             }
 
@@ -41,10 +53,10 @@ defineMode("sasm", (config) => {
             if (stream.match(/^\?!?\|?[abcCZ]+/)) return "condition"
             if (stream.match(/^!((halt)|(pause)|(done))|([!+-<>][abcd])/)) return "action"
             if (stream.eatSpace()) return null
-            
+
 
             if (stream.next()) return "error"
-            
+
         }
     } as Mode<ITokenizerState>
 })
