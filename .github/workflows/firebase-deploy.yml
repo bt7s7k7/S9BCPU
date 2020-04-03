@@ -1,0 +1,26 @@
+name: Firebase Deploy
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy-hosting:
+    runs-on: ubuntu-latest
+    name: "Deploy hosting"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm ci
+      name: Install npm packages
+    - run: npm run build
+      name: Build typescript
+    - uses: w9jds/firebase-action@master
+      name: Deploy to firebase hosting
+      with:
+        args: deploy
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
