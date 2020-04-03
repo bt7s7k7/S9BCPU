@@ -4,7 +4,7 @@
 			<textarea style="resizable: none" ref="editorArea"></textarea>
 		</div>
 		<div>
-			<button>Compile</button>
+			<button @click="compile()">Compile</button>
 			<button>Deploy</button>
 		</div>
 	</div>
@@ -36,6 +36,7 @@
 	import "codemirror/theme/material-darker.css"
 	import "codemirror/lib/codemirror.css"
 	import "../syntax"
+import { tokenize } from '../assembler'
 
 	@Component
 	export default class CodeEditor extends Vue {
@@ -57,7 +58,7 @@
 			this.editor.getWrapperElement().classList.add("grow")
 			this.editor.on("change", () => {
 				this.code = this.editor.getValue()
-			})
+            })
 		}
 
 		unmounted() {
@@ -68,6 +69,11 @@
 		onCodeChanged(newValue: string) {
 			if (this.editor.getValue() != newValue) this.editor.setValue(this.code)
 			localStorage["s9bcpu-code"] = newValue
-		}
+        }
+        
+        compile() {
+            var tokens = tokenize(this.code)
+            this.$emit("tokenized", tokens)
+        }
 	}
 </script>

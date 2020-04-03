@@ -1,12 +1,20 @@
 <template>
 	<div id="app" class="fill row">
-		<CodeEditor class="grow"></CodeEditor>
+		<CodeEditor class="grow" @tokenized="logTokenization($event)"></CodeEditor>
+		<Output class="grow border-left" :entries="outputEntries"></Output>
 	</div>
 </template>
 
 <style>
 	body {
 		background-color: black;
+		color: white;
+		font-family: "Courier New", Courier, monospace;
+		font-size: 14px;
+	}
+
+	.border-left {
+		border-left: 1px solid grey;
 	}
 
 	.fill {
@@ -46,8 +54,8 @@
 
 	button:focus {
 		color: #ccffff;
-    }
-    
+	}
+
 	button:hover {
 		color: cyan;
 	}
@@ -70,13 +78,38 @@
 	import Vue from 'vue'
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
+	import { IEntry } from './components/Output.vue'
+	import { ITokenizationResult } from './assembler'
+
+	export function encodeHTML(text: string) {
+		return text.split("").map(v => "&#" + v.charCodeAt(0) + ";").join("")
+	}
 
 	@Component({
 		components: {
-			CodeEditor: () => import("./components/CodeEditor.vue")
+			CodeEditor: () => import("./components/CodeEditor.vue"),
+			Output: () => import("./components/Output.vue")
 		}
 	})
 	export default class App extends Vue {
+		outputEntries: IEntry[] = []
 
+		log(entry: IEntry) {
+			this.outputEntries.unshift(entry)
+		}
+
+		logTokenization(result: ITokenizationResult) {
+			if (result.error) {
+				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.error.text}</span>`, actions: [] })
+			} else {
+				this.log({
+					title: `Tokenization successful`,
+					actions: [],
+					content: result.tokens.map(
+						v => `<span style="color: lightgreen">${encodeHTML(JSON.stringify(v.text))}</span> : <span style="color: skyblue">${v.type}</span> at ${v.pos.line + 1}:${v.pos.ch}`
+					).join("<br>")
+				})
+			}
+		}
 	}
 </script>
