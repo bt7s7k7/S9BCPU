@@ -20,7 +20,7 @@ export interface IAssembledOutput {
     symbols: ISymbol[]
 }
 
-type TokenType = "label" | "reference" | "location" | "number" | "movement" | "string" | "condition" | "action"
+type TokenType = "label" | "reference" | "location" | "number" | "movement" | "string" | "condition" | "action" | "arrayStart" | "arrayEnd"
 
 export interface ITokenizationResult {
     error: {
@@ -163,6 +163,10 @@ export function tokenize(code: string) {
             pushToken("condition")
         } else if (match(/^(!((halt)|(pause)|(done))|([!+-<>][abcd]))/)) { // Action
             pushToken("action")
+        } else if (match(/^\[/)) {
+            pushToken("arrayStart")
+        } else if (match(/^\]/)) {
+            pushToken("arrayEnd")
         } else if (eatSpace()) { // Whitespace
 
         } else {
