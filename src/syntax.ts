@@ -52,8 +52,7 @@ defineMode("sasm", (config) => {
             if (stream.match(/^=/)) return "operator"
             if (stream.match(/^\?!?\|?[abcCZ]+/)) return "condition"
             if (stream.match(/^!((halt)|(pause)|(done))|([!+-<>][abcd])/)) return "action"
-            if (stream.match(/^[\[\]]/)) return "operator"
-            if (stream.match(/^\.{3}/)) return "def"
+            if (stream.match(/^[\[\]~]/)) return "atom"
             if (stream.eatSpace()) return null
 
 
