@@ -1,6 +1,6 @@
 <template>
 	<div id="app" class="fill row">
-		<CodeEditor class="grow" @tokenized="logTokenization($event)" style="width: 50%"></CodeEditor>
+		<CodeEditor class="grow" style="width: 50%" @build="onBuild($event)"></CodeEditor>
 		<Output class="grow border-left" :entries="outputEntries" style="width: 50%"></Output>
 	</div>
 </template>
@@ -79,7 +79,7 @@
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
 	import { IEntry } from './components/Output.vue'
-	import { ITokenizationResult } from './assembler'
+	import { ITokenizationResult, IAssembledOutput } from './assembler'
 
 	export function encodeHTML(text: string) {
 		return text.split("").map(v => "&#" + v.charCodeAt(0) + ";").join("")
@@ -98,16 +98,17 @@
 			this.outputEntries.unshift(entry)
 		}
 
-		logTokenization(result: ITokenizationResult) {
+		onBuild(result: IAssembledOutput) {
+			var content = result.tokens.map(
+				v => `<span style="color: lightgreen">${encodeHTML(JSON.stringify(v.text))}</span> : <span style="color: skyblue">${v.type}</span> at ${v.span.from.line + 1}:${v.span.to.ch}`
+			).join("<br>")
 			if (result.errors.length > 0) {
-				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.errors.map(v=>v.text).join("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}</span>`, actions: [] })
+				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.errors.map(v => v.text).join("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}</span>`, actions: [], content })
 			} else {
 				this.log({
 					title: `Tokenization successful`,
 					actions: [],
-					content: result.tokens.map(
-						v => `<span style="color: lightgreen">${encodeHTML(JSON.stringify(v.text))}</span> : <span style="color: skyblue">${v.type}</span> at ${v.pos.line + 1}:${v.pos.ch}`
-					).join("<br>")
+					content
 				})
 			}
 		}
