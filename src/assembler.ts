@@ -22,7 +22,21 @@ export interface IAssembledOutput {
     symbols: ISymbol[]
 }
 
-type TokenType = "label" | "reference" | "location" | "number" | "movement" | "string" | "condition" | "action" | "arrayStart" | "arrayEnd" | "arrayLength"
+type TokenType = "label"
+    | "reference"
+    | "location"
+    | "number"
+    | "movement"
+    | "string"
+    | "condition"
+    | "action"
+    | "arrayStart"
+    | "arrayEnd"
+    | "arrayLength"
+    | "macro"
+    | "macroArgStart"
+    | "macroArgEnd"
+    | "declare"
 
 export interface ITokenizationResult {
     errors: IAssemblerError[],
@@ -35,7 +49,7 @@ export interface IToken {
     type: TokenType
 }
 
-const sourceLocations: {[index: string]: number} = {
+const sourceLocations: { [index: string]: number } = {
     a: 0,
     b: 0,
     c: 0,
@@ -54,7 +68,7 @@ const sourceLocations: {[index: string]: number} = {
     $0: 0
 }
 
-const destinationLocations: {[index: string]: number} = {
+const destinationLocations: { [index: string]: number } = {
     a: 0,
     b: 0,
     c: 0,
@@ -72,7 +86,19 @@ const destinationLocations: {[index: string]: number} = {
 
 const validLocations = [...Object.keys(sourceLocations), ...Object.keys(destinationLocations)]
 
+export interface IMacro {
+    name: string,
+    arguments: string[],
+    body: IToken[]
+}
+
+export interface IMacroScope {
+    macros: { [index: string]: IMacro },
+    parent: IMacroScope | null
+}
+
 export function tokenize(code: string) {
+
     var result = {
         errors: [],
         tokens: []
@@ -92,8 +118,15 @@ export function tokenize(code: string) {
     var inString = false
     var blockComment = false
     var lineComment = false
+    var declareHead = false
+    var declareBody = false
+    var macroArgs: IToken[][] | null = null
+    var macroName = ""
+    var macroArgsGroup = false
 
     var stringValue = ""
+    var currMacro: IMacro | null = null
+    var rootMacroScope = { macros: {}, parent: null } as IMacroScope
 
     var matchText: string | null = null
     var match = (pattern: RegExp | string) => {
@@ -129,14 +162,146 @@ export function tokenize(code: string) {
         } else return false
     }
 
-    var pushToken = (type: TokenType) => result.tokens.push({
-        pos: makePos(),
-        text: matchText!,
-        type: type
-    })
+    var pushToken = (type: TokenType) => {
+        if (!matchText) throw new Error(`pushToken called without matchText being at ${line + 1}:${ch} with ${type} type`)
+        if (declareHead) {
+            if (type != "macro") {
+                result.errors.push({
+                    text: `Declare header can only contain the name of the macro and arguments at ${line + 1}:${ch}`,
+                    position: makePos()
+                })
+            } else {
+                if (!currMacro) throw new Error(`Current macro not set inside declare header at ${line + 1}:${ch}`)
+                if (!currMacro.name) currMacro.name = matchText
+                else currMacro.arguments.push(matchText)
+            }
+
+        } else {
+            let token = {
+                pos: makePos(),
+                text: matchText,
+                type: type
+            }
+            if (declareBody) {
+                if (!currMacro) throw new Error(`Current macro not set inside declare body at ${line + 1}:${ch}`)
+                currMacro.body.push(token)
+            } else if (macroArgs) {
+                if (macroArgsGroup) {
+                    macroArgs[macroArgs.length - 1].push(token)
+                } else {
+                    macroArgs.push([token])
+                }
+            } else {
+                result.tokens.push(token)
+            }
+        }
+    }
+
+    var expandMacro = (name: string, args: IToken[][], scope: IMacroScope) => {
+        var findMacro = (name: string, scope: IMacroScope): IMacro | null => {
+            if (name in scope.macros) {
+                return scope.macros[name]
+            } else {
+                return scope.parent ? findMacro(name, scope.parent) : null
+            }
+        }
+
+        var macroNotFound = (name: string, pos: IPos) => result.errors.push({
+            text: `Macro ${name} not found at ${pos.line + 1}:${pos.ch}`,
+            position: pos
+        })
+
+        var macro = findMacro(name, scope)
+        if (!macro) {
+            macroNotFound(name, makePos())
+            return
+        }
+
+        if (args.length != macro.arguments.length) {
+            result.errors.push({
+                text: `Macro ${name} requires ${macro.arguments.length} arguments [${macro.arguments.join(", ")}] but ${args.length} provided at ${line + 1}:${ch}`,
+                position: makePos()
+            })
+            return
+        }
+
+        var closure = {
+            parent: scope,
+            macros: {}
+        } as IMacroScope
+
+        args.forEach((v, i) => {
+            var name = macro!.arguments[i]
+            closure.macros[name] = {
+                name,
+                arguments: [],
+                body: v
+            }
+        })
+
+        var macroArgs: IToken[][] | null = null
+        var macroArgsGroup = false
+        var macroName = ""
+        var ignoreNext = false
+
+        macro.body.forEach((v, i) => {
+            if (ignoreNext) {
+                ignoreNext = false
+                return
+            }
+
+            if (v.type == "macro") {
+                if (macro!.body[i + 1]?.type == "macroArgStart") {
+                    macroArgs = []
+                    macroName = v.text
+                    ignoreNext = true
+                } else {
+                    expandMacro(v.text, [], closure)
+                }
+            } else if (v.type == "macroArgStart") {
+                if (macroArgs) {
+                    if (macroArgsGroup) {
+                        result.errors.push({
+                            text: `Cannot start a argument group in a group at ${v.pos.line + 1}:${v.pos.ch}`,
+                            position: v.pos
+                        })
+                    } else {
+                        macroArgsGroup = true
+                        macroArgs.push([])
+                    }
+                } else {
+                    result.errors.push({
+                        text: `Unexpected '(', they can only be used after a macro, at ${v.pos.line + 1}:${v.pos.ch}`,
+                        position: v.pos
+                    })
+                }
+            } else if (v.type == "macroArgEnd") {
+                if (macroArgs) {
+                    if (macroArgsGroup) {
+                        macroArgsGroup = false
+                    } else {
+                        expandMacro(macroName, macroArgs, closure)
+                        macroArgs = null
+                    }
+                } else {
+                    result.errors.push({
+                        text: `Unexpected ')', they can only be used to stop macro argument or group, at ${v.pos.line + 1}:${v.pos.ch}`,
+                        position: v.pos
+                    })
+                }
+            } else {
+                if (macroArgs) {
+                    macroArgs.push([v])
+                } else {
+                    result.tokens.push(v)
+                }
+            }
+        })
+    }
+
     var lastPosition = -1
     while (position < code.length) {
-        if (lastPosition == position) throw new Error(`Infinite loop in tokenizer at ${ch}:${line}`)
+        if (lastPosition == position) throw new Error(`Infinite loop in tokenizer at ${position} ${line + 1}:${ch}`)
         lastPosition = position
         if (blockComment) {
             if (match(/^\*\//)) {
@@ -195,8 +360,23 @@ export function tokenize(code: string) {
             if (validLocations.includes(matchText!)) pushToken("location")
             else result.errors.push({
                 position: makePos(),
-                text: `Unknown location at ${line + 1}:${ch}`
+                text: `Unknown location ${matchText} at ${line + 1}:${ch}`
             })
+        } else if (declareHead && match(/^\{/)) {
+            if (!currMacro) throw new Error(`Current macro not set inside declare header at ${line + 1}:${ch}`)
+            declareHead = false
+            declareBody = true
+            if (!currMacro.name) {
+                result.errors.push({
+                    text: `No name set in define at ${line + 1}:${ch}`,
+                    position: makePos()
+                })
+            }
+        } else if (declareBody && match(/^\}/)) {
+            if (!currMacro) throw new Error(`No current macro set but is inside definition at ${line + 1}:${ch}`)
+            rootMacroScope.macros[currMacro.name] = currMacro
+            declareBody = false
+            currMacro = null
         } else if (match(/^=/)) { // Movement
             pushToken("movement")
         } else if (match(/^\?!?\|?[abcCZ]+/)) { // Condition
@@ -209,6 +389,42 @@ export function tokenize(code: string) {
             pushToken("arrayEnd")
         } else if (match(/^~/)) {
             pushToken("arrayLength")
+        } else if (match(/^[A-Z\d_]+/)) {
+            if (declareHead || declareBody) {
+                pushToken("macro")
+            } else {
+                macroName = matchText!
+                if (match(/^\(/)) {
+                    macroArgs = []
+                } else {
+                    expandMacro(matchText!, [], rootMacroScope)
+                }
+            }
+        } else if ((declareBody || (macroArgs && !macroArgsGroup)) && match(/^\(/)) {
+            if (declareBody) {
+                pushToken("macroArgStart")
+            } else if (macroArgs && !macroArgsGroup) {
+                macroArgsGroup = true
+                macroArgs.push([])
+            }
+        } else if ((declareBody || macroArgs) && match(/^\)/)) {
+            if (declareBody) {
+                pushToken("macroArgEnd")
+            } else if (macroArgs) {
+                if (macroArgsGroup) {
+                    macroArgsGroup = false
+                } else {
+                    expandMacro(macroName, macroArgs, rootMacroScope)
+                    macroArgs = null
+                }
+            }
+        } else if (match(/^#define/)) {
+            declareHead = true
+            currMacro = {
+                name: "",
+                arguments: [],
+                body: []
+            }
         } else if (eatSpace()) { // Whitespace
 
         } else {
@@ -216,6 +432,7 @@ export function tokenize(code: string) {
                 position: makePos(),
                 text: `Unexpected character at ${line + 1}:${ch}`
             })
+            next()
         }
     }
 

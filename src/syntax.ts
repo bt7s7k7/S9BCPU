@@ -49,10 +49,12 @@ defineMode("sasm", (config) => {
             if (stream.match(/^:\w+/)) return "variable"
             if (stream.match(/^(((0[xb])?[0-9]+)|('.))/)) return "number"
             if (stream.match(/^[a-z]/)) return "keyword"
-            if (stream.match(/^=/)) return "operator"
+            if (stream.match(/^[=\{\}]/)) return "operator"
             if (stream.match(/^\?!?\|?[abcCZ]+/)) return "condition"
             if (stream.match(/^!((halt)|(pause)|(done))|([!+-<>][abcd])/)) return "action"
-            if (stream.match(/^[\[\]~]/)) return "atom"
+            if (stream.match(/^[\[\]~\(\)]/)) return "atom"
+            if (stream.match(/^#define/)) return "def"
+            if (stream.match(/^[A-Z\d_]+/)) return "builtin"
             if (stream.eatSpace()) return null
 
 
