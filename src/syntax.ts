@@ -47,7 +47,7 @@ defineMode("sasm", (config) => {
             }
             if (stream.match(/^\w+:/)) return "meta"
             if (stream.match(/^:\w+/)) return "variable"
-            if (stream.match(/^(0[xb])?[0-9]+/)) return "number"
+            if (stream.match(/^(((0[xb])?[0-9]+)|('.))/)) return "number"
             if (stream.match(/^[a-z]/)) return "keyword"
             if (stream.match(/^=/)) return "operator"
             if (stream.match(/^\?!?\|?[abcCZ]+/)) return "condition"

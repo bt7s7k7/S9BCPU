@@ -153,7 +153,7 @@ export function tokenize(code: string) {
             pushToken("label")
         } else if (match(/^:\w+/)) { // Reference
             pushToken("reference")
-        } else if (match(/^(0[xb])?[0-9]+/)) { // Number
+        } else if (match(/^(((0[xb])?[0-9]+)|('.))/)) { // Number
             pushToken("number")
         } else if (match(/^[a-z]+/)) { // Location
             pushToken("location")
