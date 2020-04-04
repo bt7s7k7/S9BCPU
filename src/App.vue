@@ -99,8 +99,8 @@
 		}
 
 		logTokenization(result: ITokenizationResult) {
-			if (result.error) {
-				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.error.text}</span>`, actions: [] })
+			if (result.errors.length > 0) {
+				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.errors.map(v=>v.text).join("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}</span>`, actions: [] })
 			} else {
 				this.log({
 					title: `Tokenization successful`,

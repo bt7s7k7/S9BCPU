@@ -18,7 +18,7 @@ defineMode("sasm", (config) => {
         token(stream, state) {
             if (state.string) {
                 if (stream.match(/^\\(["n]|[\da-fA-F]{2})/)) {
-                    
+
                 } else if (stream.match("\"")) {
                     state.string = false
                 } else stream.next()

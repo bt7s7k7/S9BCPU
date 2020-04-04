@@ -11,11 +11,13 @@ export interface ISymbol {
     address: number
 }
 
+interface IAssemblerError {
+    text: string;
+    position: IPos;
+}
+
 export interface IAssembledOutput {
-    error: {
-        text: string,
-        position: IPos
-    } | null,
+    errors: IAssemblerError[],
     binOut: number[],
     symbols: ISymbol[]
 }
@@ -23,10 +25,7 @@ export interface IAssembledOutput {
 type TokenType = "label" | "reference" | "location" | "number" | "movement" | "string" | "condition" | "action" | "arrayStart" | "arrayEnd" | "arrayLength"
 
 export interface ITokenizationResult {
-    error: {
-        text: string,
-        position: IPos
-    } | null,
+    errors: IAssemblerError[],
     tokens: IToken[]
 }
 
@@ -36,9 +35,46 @@ export interface IToken {
     type: TokenType
 }
 
+const sourceLocations: {[index: string]: number} = {
+    a: 0,
+    b: 0,
+    c: 0,
+    d: 0,
+    sum: 0,
+    sub: 0,
+    and: 0,
+    or: 0,
+    xor: 0,
+    pc: 0,
+    stack: 0,
+    mem: 0,
+    stack$: 0,
+    mem$: 0,
+    $: 0,
+    $0: 0
+}
+
+const destinationLocations: {[index: string]: number} = {
+    a: 0,
+    b: 0,
+    c: 0,
+    d: 0,
+    m: 0,
+    n: 0,
+    pc: 0,
+    push: 0,
+    stack: 0,
+    mem: 0,
+    out: 0,
+    stack$: 0,
+    mem$: 0
+}
+
+const validLocations = [...Object.keys(sourceLocations), ...Object.keys(destinationLocations)]
+
 export function tokenize(code: string) {
     var result = {
-        error: null,
+        errors: [],
         tokens: []
     } as ITokenizationResult
 
@@ -156,7 +192,11 @@ export function tokenize(code: string) {
         } else if (match(/^(((0[xb])?[0-9]+)|('.))/)) { // Number
             pushToken("number")
         } else if (match(/^[a-z]+/)) { // Location
-            pushToken("location")
+            if (validLocations.includes(matchText!)) pushToken("location")
+            else result.errors.push({
+                position: makePos(),
+                text: `Unknown location at ${line + 1}:${ch}`
+            })
         } else if (match(/^=/)) { // Movement
             pushToken("movement")
         } else if (match(/^\?!?\|?[abcCZ]+/)) { // Condition
@@ -172,28 +212,25 @@ export function tokenize(code: string) {
         } else if (eatSpace()) { // Whitespace
 
         } else {
-            result.error = {
+            result.errors.push({
                 position: makePos(),
                 text: `Unexpected character at ${line + 1}:${ch}`
-            }
-            return result
+            })
         }
     }
 
     if (blockComment) {
-        result.error = {
+        result.errors.push({
             position: makePos(),
             text: `Unterminated block comment`
-        }
-        return result
+        })
     }
 
     if (inString) {
-        result.error = {
+        result.errors.push({
             position: makePos(),
             text: `Unterminated string`
-        }
-        return result
+        })
     }
 
     return result
