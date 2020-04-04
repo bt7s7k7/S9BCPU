@@ -1,7 +1,7 @@
 <template>
 	<div id="app" class="fill row">
-		<CodeEditor class="grow" @tokenized="logTokenization($event)"></CodeEditor>
-		<Output class="grow border-left" :entries="outputEntries"></Output>
+		<CodeEditor class="grow" @tokenized="logTokenization($event)" style="width: 50%"></CodeEditor>
+		<Output class="grow border-left" :entries="outputEntries" style="width: 50%"></Output>
 	</div>
 </template>
 
