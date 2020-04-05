@@ -1,4 +1,5 @@
 import { Position } from 'codemirror';
+import { findBestMatch } from "string-similarity"
 
 export interface ISpan {
     from: Position
@@ -88,7 +89,7 @@ const destinationLocations: { [index: string]: number } = {
     mem$: 0
 }
 
-const validLocations = [...Object.keys(sourceLocations), ...Object.keys(destinationLocations)]
+const validLocations = [...new Set([...Object.keys(sourceLocations), ...Object.keys(destinationLocations)].map(v => v.replace(/\$/g, "")))]
 
 export interface IMacro {
     name: string,
@@ -240,11 +241,15 @@ export function tokenize(code: string) {
         } else if (match(/^(((0[xb])?[0-9]+)|('.))/)) { // Number
             pushToken("number")
         } else if (match(/^[a-z]+/)) { // Location
-            if (validLocations.includes(matchText!) || validLocations.includes(matchText! + "$")) pushToken("location")
-            else result.errors.push({
-                span: makePos(),
-                text: `Unknown location ${matchText} at ${line + 1}:${ch}`
-            })
+            if (validLocations.includes(matchText!)) pushToken("location")
+            else {
+                var alts = findBestMatch(matchText!, validLocations).ratings.filter(v => v.rating > 0.5).sort((a, b) => b.rating - a.rating).map(v => v.target)
+
+                result.errors.push({
+                    span: makePos(),
+                    text: `Unknown location ${matchText} at ${line + 1}:${ch} ${alts.length > 0 ? `\n  Did you mean ${alts.slice(0, 4).join(", ")}` : ""}`
+                })
+            }
         } else if (declareHead && match(/^\{/)) {
             if (!currMacro) throw new Error(`Current macro not set inside declare header at ${line + 1}:${ch}`)
             declareHead = false
@@ -431,7 +436,7 @@ export function expandMacros(tokens: IToken[], scope: IMacroScope, annotations: 
                 return text
             }
         }
-        if (root) result.annotations.push({ text: `  Expands to ${limitLength(body.map(v=>v.text).join(" "))}`, span: position })
+        if (root) result.annotations.push({ text: `  Expands to ${limitLength(body.map(v => v.text).join(" "))}`, span: position })
 
         if (target instanceof Array) {
             target.push(...body)
@@ -448,7 +453,7 @@ export function expandMacros(tokens: IToken[], scope: IMacroScope, annotations: 
             i = expandMacro(null, tokens, i, scope, result, callStack)
         } else if (token.type == "macroArgStart" || token.type == "macroArgEnd") {
             result.errors.push({ text: `Unexpected character, not valid outside macro argument`, span: token.span })
-        } 
+        }
     }
 }
 
