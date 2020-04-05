@@ -91,6 +91,15 @@ const destinationLocations: { [index: string]: number } = {
 
 const validLocations = [...new Set([...Object.keys(sourceLocations), ...Object.keys(destinationLocations)].map(v => v.replace(/\$/g, "")))]
 
+const actions = {
+    done: 0,
+    pause: 0,
+    halt: 0,
+    pop: 0
+}
+
+const validActions = Object.keys(actions)
+
 export interface IMacro {
     name: string,
     arguments: string[],
@@ -273,7 +282,19 @@ export function tokenize(code: string) {
             pushToken("movement")
         } else if (match(/^\?!?\|?[abcCZ]+/)) { // Condition
             pushToken("condition")
-        } else if (match(/^(!((halt)|(pause)|(done))|([!+-<>][abcd]))/)) { // Action
+        } else if (match(/^![a-z]+/)) {
+            let actionName = matchText!.substr(1)
+            if (actionName in actions) {
+                pushToken("action")
+            } else {
+                var alts = findBestMatch(matchText!, validActions).ratings.filter(v => v.rating > 0.5).sort((a, b) => b.rating - a.rating).map(v => v.target)
+
+                result.errors.push({
+                    span: makePos(),
+                    text: `Unknown action ${matchText} at ${line + 1}:${ch} ${alts.length > 0 ? `\n  Did you mean ${alts.slice(0, 4).join(", ")}` : ""}`
+                })
+            }
+        } else if (match(/^[!+-<>][abcd]/)) { // Register action
             pushToken("action")
         } else if (match(/^\[/)) {
             pushToken("arrayStart")
