@@ -63,13 +63,13 @@ const sourceLocations: { [index: string]: number } = {
     and: 0,
     or: 0,
     xor: 0,
-    pc: 0,
+    stackptr$: 0,
     stack: 0,
     mem: 0,
     stack$: 0,
     mem$: 0,
     $: 0,
-    $0: 0
+    zero: 0
 }
 
 const destinationLocations: { [index: string]: number } = {
@@ -240,7 +240,7 @@ export function tokenize(code: string) {
         } else if (match(/^(((0[xb])?[0-9]+)|('.))/)) { // Number
             pushToken("number")
         } else if (match(/^[a-z]+/)) { // Location
-            if (validLocations.includes(matchText!)) pushToken("location")
+            if (validLocations.includes(matchText!) || validLocations.includes(matchText! + "$")) pushToken("location")
             else result.errors.push({
                 span: makePos(),
                 text: `Unknown location ${matchText} at ${line + 1}:${ch}`
