@@ -37,6 +37,8 @@ type TokenType = "label"
     | "macroArgStart"
     | "macroArgEnd"
     | "declare"
+    | "scopePush"
+    | "scopePop"
 
 export interface ITokenizationResult {
     errors: IAssemblerMessage[],
@@ -258,6 +260,10 @@ export function tokenize(code: string) {
             rootMacroScope.macros[currMacro.name] = currMacro
             declareBody = false
             currMacro = null
+        } else if (match(/^#push/)) {
+            pushToken("scopePush")
+        } else if (match(/^#pop/)) {
+            pushToken("scopePop")
         } else if (match(/^=/)) { // Movement
             pushToken("movement")
         } else if (match(/^\?!?\|?[abcCZ]+/)) { // Condition
