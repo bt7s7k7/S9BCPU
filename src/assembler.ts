@@ -878,6 +878,37 @@ export function parse(code: string) {
         }
     }
 
+    while (unresolvedLiterals.length > 0) {
+        var somethingHappend = false
+
+        unresolvedLiterals = unresolvedLiterals.filter(v => {
+            if (!v.ref) throw new Error("Statement does not have a ref but is inside unresolved literals")
+
+            var refLabel = v.ref.prefix + "!" + v.ref.label
+            if (refLabel in labelReferences) {
+                let target = labelReferences[refLabel]
+                v.value = target
+                somethingHappend = true
+                return false
+            } else {
+                if (v.ref.prefix.length == 1) {
+                    result.errors.push({ text: `Referenced label ${v.ref.label} not found`, span: v.span })
+                    somethingHappend = true
+                    return false
+                } else {
+                    somethingHappend = true
+                    v.ref.prefix.pop()
+                }
+            }
+
+            return true
+        })
+
+        if (!somethingHappend) {
+            unresolvedLiterals.forEach(v=>result.errors.push({ text: `Reference unresolvable`, span: v.span }))
+        }
+    }
+
     return result
 }
 
