@@ -2,17 +2,21 @@ import { ISpan, ITokenizationResult, tokenize } from './tokenize'
 import { sourceLocations, destinationLocations, conditionTargets, actions, registerActions, registers } from './constants'
 import { encodeHTML } from './utils'
 
+/** Reference to a labelled statement */
 export interface IReference {
     label: string,
+    /** Prefix based on label scope blocks */
     prefix: number[]
 }
 
 export interface ILiteral {
     value: number | ILiteral[] | Statement | string | null,
+    /** Only used in reference literals, reference to the statemnet this reference points to */
     ref: IReference | null
     span: ISpan
 }
 
+/** Abstract base for all statements */
 export interface IStatementBase {
     span: ISpan,
     label: string | null,
@@ -45,6 +49,7 @@ export namespace Statements {
         type: "registerAction"
     }
 
+    /** Constant statement is used for named data */
     export interface IConstantStatement extends IStatementBase {
         type: "constant",
         literal: ILiteral
@@ -114,15 +119,21 @@ export function parse(code: string) {
         statements: []
     } as IParseResult
 
+    /** A label for the next statement if any */
     var nextLabel: string | null = null
 
-    var labelReferences: { [index: string]: Statement } = {}
-    var nameBlockStack: { id: number, lastNumber: number }[] = [{ id: 0, lastNumber: 0 }]
+    var labeledStatements: { [index: string]: Statement } = {}
+    var labelBlockScopeStack: { id: number, lastNumber: number }[] = [{ id: 0, lastNumber: 0 }]
+    /** Reference literals waiting to be resolved */
     var unresolvedLiterals: ILiteral[] = []
 
-    var getLabelPrefix = () => nameBlockStack.map(v => v.id)
+    /** Prefix to use with labels in the current block */
+    var getLabelPrefix = () => labelBlockScopeStack.map(v => v.id)
 
+    // Token iteration variables
     let i = 0, len = result.tokens.length
+
+    /** Get a number from the current token */
     var parseNumber = () => {
         let literal = 0
         let literalText = result.tokens[i].text
@@ -140,61 +151,67 @@ export function parse(code: string) {
         return literal
     }
 
+    /** Start parsing a literal from the current token */
     var parseLiteral = (): ILiteral | null => {
         let token = result.tokens[i]
-        if (token?.type == "number") {
+        if (token?.type == "number") { // Numbers
             return { value: parseNumber(), ref: null, span: token.span }
-        } else if (token?.type == "reference") {
+        } else if (token?.type == "reference") { // References
             let literal = { value: null, ref: { label: token.text.substr(1), prefix: getLabelPrefix() }, span: token.span } as ILiteral
             unresolvedLiterals.push(literal)
             return literal
-        } else if (token?.type == "string") {
+        } else if (token?.type == "string") { // Strings
             let text = token.text
 
-            if (result.tokens[i + 1]?.type == "arrayLength") {
+            if (result.tokens[i + 1]?.type == "arrayLength") { // Detect manual array length
                 i++
                 // @ts-ignore Because TypeScript thinks the token is still the same even tho i changed
-                if (result.tokens[i + 1]?.type == "number") {
+                if (result.tokens[i + 1]?.type == "number") { // Length must be a number
                     i++
                     let length = parseNumber()
-
+                    // Only add size if the length of the provided text is smaller
                     if (length - text.length >= 0) text += Array(length - text.length).fill("\x00").join("")
+                    // If the amount of text is bigger than the manually set lenght throw
                     else result.errors.push({ text: `Cannot set length smaller than the length of the string`, span: result.tokens[i].span })
                 }
             }
 
             return { value: text, ref: null, span: token.span }
-        } else if (token?.type == "arrayStart") {
+        } else if (token?.type == "arrayStart") { // Arrays
             let startToken = token
             let value = [] as ILiteral[]
             i++
-            for (; i < len; i++) {
+            for (; i < len; i++) { // Iterate thru all tokens in the array
                 let token = result.tokens[i]
-                if (token.type == "arrayEnd") {
+                if (token.type == "arrayEnd") { // On "]" end the array
                     break
-                } else {
+                } else { // Parse all literals
                     let literal = parseLiteral()
                     if (literal) {
                         value.push(literal)
-                    } else {
+                    } else { // If parsing the literal failed, the token is not a literal and thus is not allowed to be inside an array
                         result.errors.push({ text: "Unexpected token inside array, expected only literals", span: token.span })
                     }
                 }
             }
 
+            // Detect if we broke the for loop or if we reached
+            // the end of file, because if we reached the end of
+            // file that means there is no "]" and thats wrong
             if (i == len) {
                 result.errors.push({ text: "Missing array end", span: result.tokens[i - 1].span })
                 return null
             }
 
-            if (result.tokens[i + 1]?.type == "arrayLength") {
+            if (result.tokens[i + 1]?.type == "arrayLength") { // Detect manuall array length
                 i++
                 // @ts-ignore Because TypeScript thinks the token is still the same even tho i changed
-                if (result.tokens[i + 1]?.type == "number") {
+                if (result.tokens[i + 1]?.type == "number") { // Length must be a number
                     i++
                     let wantedLength = parseNumber()
-
+                    // Test if wanted length is larger than the amount of array elements already provided
                     if (wantedLength - value.length >= 0) value.push(...Array(wantedLength - value.length).fill({ value: 0, ref: null, span: result.tokens[i].span } as ILiteral))
+                    // If wanted length is smaller throw
                     else result.errors.push({ text: `Cannot set length smaller than the amount of elements`, span: result.tokens[i].span })
                 }
             }
@@ -205,11 +222,12 @@ export function parse(code: string) {
         }
     }
 
+    /** Push a statement to the result handling all labeling */
     var pushStatement = (statement: Statement) => {
         result.statements.push(statement)
         if (nextLabel) {
             statement.label = nextLabel
-            labelReferences[nextLabel] = statement
+            labeledStatements[nextLabel] = statement
             nextLabel = null
         }
         return statement
@@ -218,7 +236,7 @@ export function parse(code: string) {
     for (; i < len; i++) {
         let token = result.tokens[i]
 
-        if (token.type == "registerAction") {
+        if (token.type == "registerAction") { // Register actions
             let action = token.text[0] as keyof typeof registerActions
             let target = token.text[1] as keyof typeof registers
 
@@ -230,15 +248,18 @@ export function parse(code: string) {
                 target
             })
             nextLabel = null
-        } else if (token.type == "condition") {
+        } else if (token.type == "condition") { // Conditions
+            // Remove leading "?"
             let text = token.text.substr(1)
             let invert = false
             let or = false
             let targets = [] as (keyof typeof conditionTargets)[]
 
-            text.split("").forEach((v) => {
-                if (v == "!") invert = true
-                else if (v == "|") or = true
+            text.split("").forEach((v) => { // Iterate thru characters of token text
+                if (v == "!") invert = true // Find invert
+                else if (v == "|") or = true // Find or
+                // Find targets, v is definetly a valid target,
+                // otherwise the tokenizer would not even create a token
                 else targets.push(v as keyof typeof conditionTargets)
             })
 
@@ -249,7 +270,7 @@ export function parse(code: string) {
                 span: token.span,
                 targets
             } as Statements.IConditionStatement)
-        } else if (token.type == "action") {
+        } else if (token.type == "action") { // Normal actions
             let action = token.text.substr(1) as keyof typeof actions
 
             pushStatement({
@@ -257,15 +278,18 @@ export function parse(code: string) {
                 action,
                 span: token.span
             } as Statements.IActionStatement)
-        } else if (token.type == "label") {
+        } else if (token.type == "label") { // Labels
+            // Cannot label a label
             if (nextLabel) result.errors.push({ text: "Cannot label a label", span: result.tokens[i - 1].span })
+            // Set the label for the next statement
             nextLabel = getLabelPrefix() + "!" + token.text.substr(0, token.text.length - 1)
-        } else if (token.type == "location") {
+        } else if (token.type == "location") { // Movement
             let destToken = token
             let dest = destToken.text
             let destValue: ILiteral | null = null
             i++
 
+            /** Throw an error about how we are expecting something */
             let expectedError = (expected: string) => {
                 if (result.tokens[i]) result.errors.push({
                     text: "Unexpected token, expected " + expected,
@@ -281,26 +305,27 @@ export function parse(code: string) {
             if (!destValue && result.tokens[i]?.type != "movement") {
                 expectedError("movement, literal or reference")
             } else {
-                if (destValue) {
+                if (destValue) { // If there is a literal is a location with a literal which is denoted by "$" suffix
                     dest += "$"
                     i++
                 }
 
-                if (!(dest in destinationLocations)) {
+                if (!(dest in destinationLocations)) { // Test if the location is valid
                     result.errors.push({ text: `Invalid destination location ${dest}`, span: destToken.span })
                     continue
                 }
 
 
-                if (result.tokens[i]?.type != "movement") {
+                if (result.tokens[i]?.type != "movement") { // Expect a "=" after destination
                     expectedError("movement")
                 } else {
                     i++
 
                     // @ts-ignore Because TypeScript thinks the token is the same, even tho i changed
                     if (result.tokens[i]?.type != "location") {
+                        // If there is a literal without a location it must be a literal source
                         let source = parseLiteral()
-                        if (source) {
+                        if (source) { // Check if it's accually a literal source
                             pushStatement({
                                 type: "movement",
                                 from: "$",
@@ -313,7 +338,7 @@ export function parse(code: string) {
                                     source: source.span.source
                                 }
                             } as Statements.IMovementStatement)
-                        } else {
+                        } else { // If not throw
                             expectedError("location or literal")
                         }
                     } else {
@@ -322,11 +347,11 @@ export function parse(code: string) {
                         i++
 
                         let sourceValue = parseLiteral()
-                        if (sourceValue) {
+                        if (sourceValue) {// If there is a literal is a location with a literal which is denoted by "$" suffix
                             source += "$"
                         } else i--
 
-                        if (!(source in sourceLocations)) {
+                        if (!(source in sourceLocations)) { // Test if the location is valid
                             result.errors.push({ text: `Invalid source location ${source}`, span: sourceToken.span })
                             continue
                         }
@@ -346,57 +371,58 @@ export function parse(code: string) {
                     }
                 }
             }
-        } else if (token.type == "scopePush") {
-            nameBlockStack.push({ id: nameBlockStack[nameBlockStack.length - 1].lastNumber + 1, lastNumber: 0 })
-            nameBlockStack[nameBlockStack.length - 2].lastNumber++
-        } else if (token.type == "scopePop") {
-            if (nameBlockStack.length > 1) {
-                nameBlockStack.pop()
-            } else {
+        } else if (token.type == "scopePush") { // Label scope block start
+            // Push the new level of the stack
+            labelBlockScopeStack.push({ id: labelBlockScopeStack[labelBlockScopeStack.length - 1].lastNumber + 1, lastNumber: 0 })
+            // Increment the id of the parent level
+            labelBlockScopeStack[labelBlockScopeStack.length - 2].lastNumber++
+        } else if (token.type == "scopePop") { // Label scope block end
+            if (labelBlockScopeStack.length > 1) { // If we are not the root level we can pop the stack
+                labelBlockScopeStack.pop()
+            } else { // Otherwise we can't so throw
                 result.errors.push({ text: "Unpaired pop", span: token.span })
             }
-        } else if (nextLabel) {
-            if (token.type == "string" || token.type == "arrayStart") {
-                let literal = parseLiteral()
-                if (literal) {
-                    var statement = {
-                        type: "constant",
-                        literal: literal,
-                        span: literal.span
-                    } as Statements.IConstantStatement
+        } else if (nextLabel && (token.type == "string" || token.type == "arrayStart")) { // Named data
+            let literal = parseLiteral() // Parse the literal of the data to name
+            if (literal) { // It must be success full
+                var statement = {
+                    type: "constant",
+                    literal: literal,
+                    span: literal.span
+                } as Statements.IConstantStatement
 
-                    if (nextLabel) {
-                        statement.label = nextLabel
-                        labelReferences[nextLabel] = statement
-                        nextLabel = null
-                    }
-
-                    // No need to push the statement because, constant statements should not emit instructions
+                if (nextLabel) {
+                    statement.label = nextLabel
+                    labeledStatements[nextLabel] = statement
+                    nextLabel = null
                 }
-            }
-        } else {
+
+                // No need to push the statement because, constant statements should not emit instructions
+            } else throw new Error("Parsing a literal of named data failed, that should be impossible")
+        } else { // Any other tokens are invalid
             result.errors.push({ text: "Unexpected token", span: token.span })
         }
     }
 
+    // Resolve literals
     while (unresolvedLiterals.length > 0) {
         var somethingHappend = false
 
         unresolvedLiterals = unresolvedLiterals.filter(v => {
             if (!v.ref) throw new Error("Statement does not have a ref but is inside unresolved literals")
 
-            var refLabel = v.ref.prefix + "!" + v.ref.label
-            if (refLabel in labelReferences) {
-                let target = labelReferences[refLabel]
+            var refLabel = v.ref.prefix + "!" + v.ref.label // Calculate the name of the label of the statmenent we could be referencing
+            if (refLabel in labeledStatements) { // If it exists we set it and remove this reference from waiting
+                let target = labeledStatements[refLabel]
                 v.value = target
                 somethingHappend = true
                 return false
-            } else {
-                if (v.ref.prefix.length == 1) {
+            } else { // If not
+                if (v.ref.prefix.length == 1) { // We throw because there is not parent scope that could contain the label
                     result.errors.push({ text: `Referenced label ${v.ref.label} not found`, span: v.span })
                     somethingHappend = true
                     return false
-                } else {
+                } else { // There could be a parent scope that contains the label so pop the prefix
                     somethingHappend = true
                     v.ref.prefix.pop()
                 }
@@ -405,8 +431,11 @@ export function parse(code: string) {
             return true
         })
 
-        if (!somethingHappend) {
-            unresolvedLiterals.forEach(v=>result.errors.push({ text: `Reference unresolvable`, span: v.span }))
+        if (!somethingHappend) { // If nothing happened we are in a infinite loop
+            // Throw on all waiting statements
+            unresolvedLiterals.forEach(v => result.errors.push({ text: `Reference unresolvable`, span: v.span }))
+            // And terminate
+            break
         }
     }
 
