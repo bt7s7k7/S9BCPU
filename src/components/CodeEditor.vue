@@ -40,12 +40,12 @@
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
 	import { EditorFromTextArea, fromTextArea, Position } from "codemirror"
-	import "codemirror/theme/material-darker.css"
-	import "codemirror/lib/codemirror.css"
 	import "../syntax"
 	import { assemble, IAssembledOutput } from '../compilation/assembler'
 	import "codemirror/addon/lint/lint"
 	import "codemirror/addon/lint/lint.css"
+	import "codemirror/theme/material-darker.css"
+	import "codemirror/lib/codemirror.css"
 
 	@Component
 	export default class CodeEditor extends Vue {
