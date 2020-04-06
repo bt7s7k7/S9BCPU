@@ -43,7 +43,7 @@
 	import "codemirror/theme/material-darker.css"
 	import "codemirror/lib/codemirror.css"
 	import "../syntax"
-	import { assemble, IAssembledOutput } from '../assembler'
+	import { assemble, IAssembledOutput } from '../compilation/assembler'
 	import "codemirror/addon/lint/lint"
 	import "codemirror/addon/lint/lint.css"
 

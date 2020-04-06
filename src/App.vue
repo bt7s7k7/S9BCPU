@@ -79,7 +79,8 @@
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
 	import { IEntry } from './components/Output.vue'
-	import { ITokenizationResult, IAssembledOutput, debugStatement } from './assembler'
+	import { IAssembledOutput } from './compilation/assembler'
+	import { debugStatement } from './compilation/parser'
 
 	@Component({
 		components: {
