@@ -79,11 +79,7 @@
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
 	import { IEntry } from './components/Output.vue'
-	import { ITokenizationResult, IAssembledOutput } from './assembler'
-
-	export function encodeHTML(text: string) {
-		return text.split("").map(v => "&#" + v.charCodeAt(0) + ";").join("")
-	}
+	import { ITokenizationResult, IAssembledOutput, debugStatement } from './assembler'
 
 	@Component({
 		components: {
@@ -99,8 +95,8 @@
 		}
 
 		onBuild(result: IAssembledOutput) {
-			var content = result.tokens.map(
-				v => `<span style="color: lightgreen">${encodeHTML(JSON.stringify(v.text))}</span> : <span style="color: skyblue">${v.type}</span> at ${v.span.from.line + 1}:${v.span.to.ch}`
+			var content = result.statements.map(
+				v => `${debugStatement(v)} at ${v.span.from.line + 1}:${v.span.to.ch}`
 			).join("<br>")
 			if (result.errors.length > 0) {
 				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.errors.map(v => v.text).join("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}</span>`, actions: [], content })
