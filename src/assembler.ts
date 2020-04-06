@@ -866,11 +866,19 @@ export function parse(code: string) {
             if (token.type == "string" || token.type == "arrayStart") {
                 let literal = parseLiteral()
                 if (literal) {
-                    pushStatement({
+                    var statement = {
                         type: "constant",
                         literal: literal,
                         span: literal.span
-                    } as Statements.IConstantStatement)
+                    } as Statements.IConstantStatement
+
+                    if (nextLabel) {
+                        statement.label = nextLabel
+                        labelReferences[nextLabel] = statement
+                        nextLabel = null
+                    }
+
+                    // No need to push the statement because, constant statements should not emit instructions
                 }
             }
         } else {
