@@ -30,8 +30,8 @@
 		transition: opacity 0s !important;
 		border-radius: 0 !important;
 		background-color: #111111;
-        border-color: #333333;
-        color: #aaaaaa;
+		border-color: #333333;
+		color: #aaaaaa;
 	}
 </style>
 
@@ -41,11 +41,11 @@
 	import * as vueProp from "vue-property-decorator"
 	import { EditorFromTextArea, fromTextArea, Position } from "codemirror"
 	import "../syntax"
-	import { assemble, IAssembledOutput } from '../compilation/assembler'
 	import "codemirror/addon/lint/lint"
 	import "codemirror/addon/lint/lint.css"
 	import "codemirror/theme/material-darker.css"
 	import "codemirror/lib/codemirror.css"
+	import { assemble } from 's9b-compiler'
 
 	@Component
 	export default class CodeEditor extends Vue {

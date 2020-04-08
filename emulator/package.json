@@ -11,6 +11,7 @@
     "@types/string-similarity": "^3.0.0",
     "codemirror": "^5.52.2",
     "core-js": "^3.6.4",
+    "s9b-compiler": "file:s9b-compiler",
     "string-similarity": "^4.0.1",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.2",

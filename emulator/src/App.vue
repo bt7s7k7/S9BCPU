@@ -79,8 +79,7 @@
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
 	import { IEntry } from './components/Output.vue'
-	import { IAssembledOutput } from './compilation/assembler'
-	import { debugStatement } from './compilation/parser'
+	import { IAssembledOutput, debugStatement } from 's9b-compiler'
 
 	@Component({
 		components: {

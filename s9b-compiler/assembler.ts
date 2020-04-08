@@ -1,11 +1,10 @@
-import { Position } from 'codemirror';
 import { ISpan } from './tokenize';
 import { IParseResult, parse } from './parser';
 
 
 export interface ISymbol {
     label: string,
-    position: Position,
+    position: ISpan,
     address: number
 }
 

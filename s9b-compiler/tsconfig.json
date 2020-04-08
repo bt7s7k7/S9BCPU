@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "incremental": true,
+        "target": "ES6",
+        "sourceMap": true,
+        "declaration": true,
+        "lib": [ "ESNext" ],
+        "module": "CommonJS",
+        "outDir": "build"
+    }
+}

@@ -31,7 +31,7 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
+    "tests/**/*.tsx", "s9b-compiler/assembler.ts", "s9b-compiler/parser.ts", "s9b-compiler/constants.ts", "s9b-compiler/tokenize.ts", "s9b-compiler/utils.ts", "s9b-compiler/macroExpansion.ts"
   ],
   "exclude": [
     "node_modules"

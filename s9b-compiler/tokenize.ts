@@ -1,13 +1,17 @@
-import { Position } from 'codemirror';
 import { findBestMatch } from "string-similarity";
 import { IAssemblerMessage } from "./assembler"
 import { expandMacros, IMacroScope, IMacro } from './macroExpansion';
 import { VALID_ACTIONS, VALID_LOCATIONS, ACTIONS } from './constants';
 
+interface IPosition {
+    ch: number;
+    line: number;
+}
+
 /** Start and end positions of an element */
 export interface ISpan {
-    from: Position
-    to: Position
+    from: IPosition
+    to: IPosition
     source: string
 }
 
@@ -142,7 +146,7 @@ export function tokenize(code: string) {
 
     /** Last position, checked to terminate infinite loops */
     var lastPosition = -1
-    var lastPositionObject = { ch, line } as Position
+    var lastPositionObject = { ch, line } as IPosition
     while (position < code.length) {
         // Infinite loop terminator
         if (lastPosition == position) throw new Error(`Infinite loop in tokenizer at ${position} ${line + 1}:${ch}`)
