@@ -2,7 +2,7 @@ import { Position } from 'codemirror';
 import { findBestMatch } from "string-similarity";
 import { IAssemblerMessage } from "./assembler"
 import { expandMacros, IMacroScope, IMacro } from './macroExpansion';
-import { validActions, validLocations, actions } from './constants';
+import { VALID_ACTIONS, VALID_LOCATIONS, ACTIONS } from './constants';
 
 /** Start and end positions of an element */
 export interface ISpan {
@@ -192,10 +192,10 @@ export function tokenize(code: string) {
             pushToken("number")
         } else if (match(/^[a-z]+/)) { // Location
             // Test if the location is valid
-            if (validLocations.includes(matchText!)) pushToken("location")
+            if (VALID_LOCATIONS.includes(matchText!)) pushToken("location")
             else {
                 // Find close matches to help
-                var alts = findBestMatch(matchText!, validLocations).ratings.filter(v => v.rating > 0.5).sort((a, b) => b.rating - a.rating).map(v => v.target)
+                var alts = findBestMatch(matchText!, VALID_LOCATIONS).ratings.filter(v => v.rating > 0.5).sort((a, b) => b.rating - a.rating).map(v => v.target)
 
                 result.errors.push({
                     span: makeSpan(),
@@ -229,11 +229,11 @@ export function tokenize(code: string) {
             // Remove the leading "!"
             let actionName = matchText!.substr(1)
             // Test if action exists
-            if (actionName in actions) {
+            if (actionName in ACTIONS) {
                 pushToken("action")
             } else {
                 // Find close matches to help
-                var alts = findBestMatch(matchText!, validActions).ratings.filter(v => v.rating > 0.5).sort((a, b) => b.rating - a.rating).map(v => v.target)
+                var alts = findBestMatch(matchText!, VALID_ACTIONS).ratings.filter(v => v.rating > 0.5).sort((a, b) => b.rating - a.rating).map(v => v.target)
 
                 result.errors.push({
                     span: makeSpan(),

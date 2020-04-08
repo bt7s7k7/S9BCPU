@@ -1,5 +1,5 @@
 import { ISpan, ITokenizationResult, tokenize } from './tokenize'
-import { sourceLocations, destinationLocations, conditionTargets, actions, registerActions, registers } from './constants'
+import { SOURCE_LOCATIONS, DESTINATION_LOCATIONS, CONDITION_TARGETS, ACTIONS, REGISTER_ACTIONS, REGISTER_ACTION_REGISTERS } from './constants'
 import { encodeHTML } from './utils'
 
 /** Reference to a labelled statement */
@@ -24,9 +24,9 @@ export interface IStatementBase {
 
 export namespace Statements {
     export interface IMovementStatement extends IStatementBase {
-        from: keyof typeof sourceLocations | null,
+        from: keyof typeof SOURCE_LOCATIONS | null,
         fromLiteral: ILiteral | null,
-        to: keyof typeof destinationLocations
+        to: keyof typeof DESTINATION_LOCATIONS
         toLiteral: ILiteral | null,
         type: "movement"
     }
@@ -34,18 +34,18 @@ export namespace Statements {
     export interface IConditionStatement extends IStatementBase {
         invert: boolean,
         or: boolean,
-        targets: (keyof typeof conditionTargets)[],
+        targets: (keyof typeof CONDITION_TARGETS)[],
         type: "condition"
     }
 
     export interface IActionStatement extends IStatementBase {
-        action: keyof typeof actions,
+        action: keyof typeof ACTIONS,
         type: "action"
     }
 
     export interface IRegisterActionStatement extends IStatementBase {
-        action: keyof typeof registerActions,
-        target: keyof typeof registers,
+        action: keyof typeof REGISTER_ACTIONS,
+        target: keyof typeof REGISTER_ACTION_REGISTERS,
         type: "registerAction"
     }
 
@@ -237,8 +237,8 @@ export function parse(code: string) {
         let token = result.tokens[i]
 
         if (token.type == "registerAction") { // Register actions
-            let action = token.text[0] as keyof typeof registerActions
-            let target = token.text[1] as keyof typeof registers
+            let action = token.text[0] as keyof typeof REGISTER_ACTIONS
+            let target = token.text[1] as keyof typeof REGISTER_ACTION_REGISTERS
 
             result.statements.push({
                 type: "registerAction",
@@ -253,14 +253,14 @@ export function parse(code: string) {
             let text = token.text.substr(1)
             let invert = false
             let or = false
-            let targets = [] as (keyof typeof conditionTargets)[]
+            let targets = [] as (keyof typeof CONDITION_TARGETS)[]
 
             text.split("").forEach((v) => { // Iterate thru characters of token text
                 if (v == "!") invert = true // Find invert
                 else if (v == "|") or = true // Find or
                 // Find targets, v is definetly a valid target,
                 // otherwise the tokenizer would not even create a token
-                else targets.push(v as keyof typeof conditionTargets)
+                else targets.push(v as keyof typeof CONDITION_TARGETS)
             })
 
             pushStatement({
@@ -271,7 +271,7 @@ export function parse(code: string) {
                 targets
             } as Statements.IConditionStatement)
         } else if (token.type == "action") { // Normal actions
-            let action = token.text.substr(1) as keyof typeof actions
+            let action = token.text.substr(1) as keyof typeof ACTIONS
 
             pushStatement({
                 type: "action",
@@ -310,7 +310,7 @@ export function parse(code: string) {
                     i++
                 }
 
-                if (!(dest in destinationLocations)) { // Test if the location is valid
+                if (!(dest in DESTINATION_LOCATIONS)) { // Test if the location is valid
                     result.errors.push({ text: `Invalid destination location ${dest}`, span: destToken.span })
                     continue
                 }
@@ -351,7 +351,7 @@ export function parse(code: string) {
                             source += "$"
                         } else i--
 
-                        if (!(source in sourceLocations)) { // Test if the location is valid
+                        if (!(source in SOURCE_LOCATIONS)) { // Test if the location is valid
                             result.errors.push({ text: `Invalid source location ${source}`, span: sourceToken.span })
                             continue
                         }
