@@ -174,7 +174,7 @@ export function tokenize(code: string) {
                 inString = false
                 result.tokens.push({ // Write the string
                     span: makeSpan(),
-                    text: stringValue, // Text is the string content
+                    text: stringValue + "\x00", // Text is the string content
                     type: "string"
                 })
                 stringValue = ""
