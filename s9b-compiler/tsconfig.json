@@ -6,6 +6,7 @@
         "declaration": true,
         "lib": [ "ESNext" ],
         "module": "CommonJS",
-        "outDir": "build"
+        "outDir": "build",
+        "strict": true
     }
 }

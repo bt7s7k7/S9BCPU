@@ -10,7 +10,7 @@ export interface IReference {
 }
 
 export interface ILiteral {
-    value: number | ILiteral[] | Statement | string | null,
+    value: number | Statement | null,
     /** Only used in reference literals, reference to the statemnet this reference points to */
     ref: IReference | null
     span: ISpan
@@ -52,40 +52,45 @@ export namespace Statements {
     /** Constant statement is used for named data */
     export interface IConstantStatement extends IStatementBase {
         type: "constant",
-        literal: ILiteral
+        value: string | ILiteral[]
     }
 }
 
-type Statement = Statements.IActionStatement | Statements.IConditionStatement | Statements.IMovementStatement | Statements.IRegisterActionStatement | Statements.IConstantStatement
+export type Statement = Statements.IActionStatement | Statements.IConditionStatement | Statements.IMovementStatement | Statements.IRegisterActionStatement | Statements.IConstantStatement
 
 export interface IParseResult extends ITokenizationResult {
     statements: Statement[]
 }
 
-export function debugStatement(statement: Statement) {
+export function debugStatement(statement: Statement, direct: boolean) {
     var ret = [] as string[]
 
-    var debugLiteral = (literal: ILiteral) => {
+    var debugLiteral = (literal: ILiteral, direct: boolean) => {
         if (literal.ref) {
             ret.push((":" + literal.ref.prefix + "!" + literal.ref.label).fontcolor("firebrick"))
         }
         if (literal.value != null) {
             if (literal.value instanceof Array) {
                 ret.push("[")
-                literal.value.forEach(v => debugLiteral(v))
+                literal.value.forEach(v => debugLiteral(v, false))
                 ret.push("]")
             } else if (typeof literal.value == "number") {
                 ret.push(literal.value.toString().fontcolor("crimson"))
             } else if (typeof literal.value == "string") {
                 ret.push(encodeHTML(JSON.stringify(literal.value)).fontcolor("crimson"))
             } else {
-                ret.push(`${literal.value.span.from.line + 1}:${literal.value.span.from.ch}`.fontcolor("crimson"))
+                ret.push((literal.value.span.from.line != literal.span.from.line ? `${literal.value.span.from.line + 1}:${literal.value.span.from.ch}` : "<").fontcolor("crimson"))
+                if (literal.value.type == "constant" && direct) {
+                    ret.push(debugStatement(literal.value, false))
+                }
             }
         }
     }
 
-    if (statement.label) ret.push((statement.label + ":").fontcolor("yellow"))
-    ret.push(statement.type.fontcolor("skyblue"))
+    if (direct) {
+        if (statement.label) ret.push((statement.label + ":").fontcolor("yellow"))
+        ret.push(statement.type.fontcolor("skyblue"))
+    }
 
     if (statement.type == "action") {
         ret.push(statement.action.fontcolor("lightsalmon"))
@@ -99,15 +104,21 @@ export function debugStatement(statement: Statement) {
     } else if (statement.type == "movement") {
         if (statement.to) ret.push(statement.to.fontcolor("lightgreen"))
         if (statement.toLiteral) {
-            debugLiteral(statement.toLiteral)
+            debugLiteral(statement.toLiteral, direct)
         }
         ret.push("=".fontcolor("cyan"))
         if (statement.from) ret.push(statement.from.fontcolor("lightgreen"))
         if (statement.fromLiteral) {
-            debugLiteral(statement.fromLiteral)
+            debugLiteral(statement.fromLiteral, direct)
         }
     } else if (statement.type == "constant") {
-        debugLiteral(statement.literal)
+        if (statement.value instanceof Array) {
+            ret.push("[")
+            statement.value.forEach(v => debugLiteral(v, false))
+            ret.push("]")
+        } else {
+            ret.push(encodeHTML(JSON.stringify(statement.value)).fontcolor("crimson"))
+        }
     }
 
     return ret.join(" ")
@@ -176,7 +187,7 @@ export function parse(code: string) {
                 }
             }
 
-            return { value: text, ref: null, span: token.span }
+            return { value: { type: "constant", label: null, span: token.span, value: text } as Statements.IConstantStatement, ref: null, span: token.span }
         } else if (token?.type == "arrayStart") { // Arrays
             let startToken = token
             let value = [] as ILiteral[]
@@ -216,7 +227,7 @@ export function parse(code: string) {
                 }
             }
 
-            return { value, ref: null, span: { from: startToken.span.from, to: result.tokens[i].span.to, source: startToken.span.source } }
+            return { value: { type: "constant", label: null, span: token.span, value } as Statements.IConstantStatement, ref: null, span: { from: startToken.span.from, to: result.tokens[i].span.to, source: startToken.span.source } }
         } else {
             return null
         }
@@ -385,11 +396,7 @@ export function parse(code: string) {
         } else if (nextLabel && (token.type == "string" || token.type == "arrayStart")) { // Named data
             let literal = parseLiteral() // Parse the literal of the data to name
             if (literal) { // It must be success full
-                var statement = {
-                    type: "constant",
-                    literal: literal,
-                    span: literal.span
-                } as Statements.IConstantStatement
+                var statement = literal.value as Statements.IConstantStatement
 
                 if (nextLabel) {
                     statement.label = nextLabel

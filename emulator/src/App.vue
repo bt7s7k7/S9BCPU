@@ -79,7 +79,7 @@
 	import Component from "vue-class-component"
 	import * as vueProp from "vue-property-decorator"
 	import { IEntry } from './components/Output.vue'
-	import { IAssembledOutput, debugStatement } from 's9b-compiler'
+	import { IAssembledOutput, debugStatement, Statement } from 's9b-compiler'
 
 	@Component({
 		components: {
@@ -95,9 +95,16 @@
 		}
 
 		onBuild(result: IAssembledOutput) {
-			var content = result.statements.map(
-				v => `${debugStatement(v)} at ${v.span.from.line + 1}:${v.span.to.ch}`
-			).join("<br>")
+			var lastStatement = null as Statement | null
+			var content = result.binOut.map((v, i) => {
+				let statement = result.lookup[i]
+				if (!statement || lastStatement == statement) {
+                    return `${i}: ${v}`
+				} else {
+					lastStatement = statement
+					return `${debugStatement(statement, true)} at ${statement.span.from.line + 1}:${statement.span.to.ch}<br>${i}: ${v} `
+				}
+			}).join("<br>")
 			if (result.errors.length > 0) {
 				this.log({ title: `<span style="color: lightsalmon">[ERR] ${result.errors.map(v => v.text).join("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}</span>`, actions: [], content })
 			} else {

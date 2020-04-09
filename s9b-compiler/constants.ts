@@ -1,10 +1,13 @@
 
+export const CONDITION_OR = 0b001000000
+export const CONDITION_INVERT = 0b000100000
+
 export const CONDITION_TARGETS = {
-    a: 0,
-    b: 0,
-    c: 0,
-    C: 0,
-    Z: 0
+    Z: 0b000010000,
+    C: 0b000001000,
+    a: 0b000000100,
+    b: 0b000000010,
+    c: 0b000000001,
 } as const
 
 export const INST_TYPE = {
@@ -14,21 +17,21 @@ export const INST_TYPE = {
 } as const
 
 export const SOURCE_LOCATIONS = {
-    a: 10,
-    b: 11,
-    c: 12,
-    d: 13,
-    sum: 1,
-    sub: 2,
-    and: 3,
-    or: 4,
-    xor: 5,
-    stackptr$: 14,
-    stack: 9,
-    mem: 7,
-    stack$: 8,
-    mem$: 6,
-    $: 15,
+    a: 160,
+    b: 176,
+    c: 192,
+    d: 208,
+    sum: 16,
+    sub: 32,
+    and: 48,
+    or: 64,
+    xor: 80,
+    stackptr$: 224,
+    stack: 144,
+    mem: 112,
+    stack$: 128,
+    mem$: 96,
+    $: 240,
     zero: 0
 } as const
 

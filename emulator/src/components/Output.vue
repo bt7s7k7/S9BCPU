@@ -1,5 +1,5 @@
 <template>
-	<div style="overflow: auto">
+	<div class="output">
 		<div v-for="(entry, index) in entries" :key="index" class="output-entry">
 			<div class="row title">
 				<div class="grow" v-html="entry.title"></div>
@@ -17,6 +17,7 @@
 <style>
 	.output-entry {
 		border-bottom: 1px solid #333333;
+        width: 100%;
 	}
 
 	.output-entry > .title {
@@ -27,6 +28,11 @@
 	.output-entry > .content {
 		padding: 4px;
 	}
+
+    .output {
+        overflow: auto;
+        white-space: nowrap;
+    }
 </style>
 
 <script lang="ts">
