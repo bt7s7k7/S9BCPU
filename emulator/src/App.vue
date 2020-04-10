@@ -3,8 +3,8 @@
 		<div class="fill row">
 			<div style="flex-basis: 200px" class="cpu-info" v-html="cpuInfo"></div>
 			<div class="grow row border-left">
-				<CodeEditor class="grow relative" @build="onBuild($event)"></CodeEditor>
-				<Output class="border-left grow" :entries="outputEntries"></Output>
+				<CodeEditor class="grow relative contain" @build="onBuild($event)"></CodeEditor>
+				<Output class="border-left grow contain" :entries="outputEntries"></Output>
 			</div>
 		</div>
 	</div>
@@ -54,6 +54,9 @@
 
     .relative {
         position: relative;
+    }
+
+    .contain {
         contain: strict;
     }
 
