@@ -1,7 +1,12 @@
 <template>
-	<div id="app" class="fill row">
-		<CodeEditor class="grow" style="width: 50%" @build="onBuild($event)"></CodeEditor>
-		<Output class="grow border-left" :entries="outputEntries" style="width: 50%"></Output>
+	<div id="app" class="fill">
+		<div class="fill row">
+			<div style="flex-basis: 200px" class="cpu-info" v-html="cpuInfo"></div>
+			<div class="grow row border-left">
+				<CodeEditor class="grow relative" @build="onBuild($event)"></CodeEditor>
+				<Output class="border-left grow" :entries="outputEntries"></Output>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -14,8 +19,12 @@
 	}
 
 	.border-left {
-		border-left: 1px solid grey;
-	}
+		border-left: 1px solid #212121;
+    }
+    
+    .border-top {
+		border-top: 1px solid #212121;
+    }
 
 	.fill {
 		position: absolute;
@@ -40,8 +49,13 @@
 	}
 
 	.grow {
-		flex-grow: 1;
+		flex-grow: 1
 	}
+
+    .relative {
+        position: relative;
+        contain: strict;
+    }
 
 	button {
 		border: none;
@@ -71,7 +85,15 @@
 
 	button::after {
 		content: " ]";
-	}
+    }
+    
+    .cpu-info > * {
+        border-bottom: 1px solid #111111;
+    }
+    
+    .cpu-info {
+        padding: 4px;
+    }
 </style>
         
 <script lang="ts">
@@ -80,6 +102,7 @@
 	import * as vueProp from "vue-property-decorator"
 	import { IEntry } from './components/Output.vue'
 	import { IAssembledOutput, debugStatement, Statement } from 's9b-compiler'
+    import { S9BCPU } from "./CPU/s9b"
 
 	@Component({
 		components: {
@@ -89,6 +112,7 @@
 	})
 	export default class App extends Vue {
 		outputEntries: IEntry[] = []
+		cpu = new S9BCPU(2 ** 9)
 
 		log(entry: IEntry) {
 			this.outputEntries.unshift(entry)
@@ -99,7 +123,7 @@
 			var content = result.binOut.map((v, i) => {
 				let statement = result.lookup[i]
 				if (!statement || lastStatement == statement) {
-                    return `${i}: ${v}`
+					return `${i}: ${v}`
 				} else {
 					lastStatement = statement
 					return `${debugStatement(statement, true)} at ${statement.span.from.line + 1}:${statement.span.to.ch}<br>${i}: ${v} `
@@ -115,5 +139,11 @@
 				})
 			}
 		}
+
+
+		public get cpuInfo(): string {
+			return this.cpu.getInfo()
+		}
+
 	}
 </script>
