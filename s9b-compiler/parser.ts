@@ -159,6 +159,11 @@ export function parse(code: string) {
             literal = parseInt(literalText)
         }
 
+        if (literal < 0 || literal >= 512) {
+            result.errors.push({ text: "Numbers must be 0 >= x > 512", span: result.tokens[i].span })
+            literal = 0
+        }
+
         return literal
     }
 
