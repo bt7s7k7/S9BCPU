@@ -104,6 +104,10 @@
 	import { IAssembledOutput, debugStatement, Statement } from 's9b-compiler'
     import { S9BCPU } from "./CPU/s9b"
 
+    window.addEventListener("keydown", (event)=>{
+        if (event.ctrlKey && event.code == "KeyS") event.preventDefault()
+    })
+    
 	@Component({
 		components: {
 			CodeEditor: () => import("./components/CodeEditor.vue"),
