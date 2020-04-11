@@ -1,4 +1,4 @@
-import { CPU, IExecutionResult, Register, ActionRegister, Combinator } from "./base"
+import { CPU, IExecutionResult, Register, ActionRegister, Combinator, Memory } from "./base"
 
 export class S9BCPU extends CPU {
     public components = {
@@ -19,6 +19,7 @@ export class S9BCPU extends CPU {
         stackReadAddress: new Combinator("Stack Read Address", this.wordSize, "stackRegister", "mRegister", (a, b) => a + b),
         stackWriteAddress: new Combinator("Stack Write Address", this.wordSize, "stackRegister", "nRegister", (a, b) => a + b),
         memoryBuffer: new Register("Memory Buffer"),
+        memory: new Memory("Memory", 256)
     }
 
     public tick(): IExecutionResult {

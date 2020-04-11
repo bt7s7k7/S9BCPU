@@ -1,0 +1,121 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+}
+
+.border-left {
+    border-left: 1px solid #212121;
+}
+
+.border-top {
+    border-top: 1px solid #212121;
+}
+
+.fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100% !important; /* Important because CodeMirror overrides it */
+}
+
+#app {
+    height: 100vh;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+.relative {
+    position: relative;
+}
+
+.contain {
+    contain: strict;
+}
+
+button {
+    border: none;
+    background: none;
+    color: white;
+    font-family: "Courier New", Courier, monospace;
+    padding: 2px;
+    outline: none;
+}
+
+button:focus {
+    color: #ccffff;
+}
+
+button:hover {
+    color: cyan;
+}
+
+button:active {
+    color: #00ff00;
+}
+
+button::before {
+    text-align: left;
+    content: "[ ";
+}
+
+button::after {
+    content: " ]";
+}
+
+.cpu-info > * {
+    border-bottom: 1px solid #111111;
+}
+
+.cpu-info {
+    padding: 4px;
+}
+
+.toggle {
+    color: white;
+}
+
+.toggle:focus {
+    color: #ccffff;
+}
+
+.toggle:hover {
+    color: cyan;
+}
+
+.toggle:active {
+    color: #00ff00;
+}
+
+input[type="checkbox"] {
+    background: none;
+    color: inherit;
+    appearance: none;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+input[type="checkbox"]::before {
+    content: "[ ";
+}
+
+input[type="checkbox"]:checked::before {
+    content: "[x";
+}
+
+input[type="checkbox"]::after {
+    content: "]";
+}

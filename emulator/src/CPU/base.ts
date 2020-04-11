@@ -1,3 +1,5 @@
+import { IAssembledOutput } from "s9b-compiler"
+
 export abstract class Component {
     protected lastState = " "
     protected labelColor = "white"
@@ -123,4 +125,27 @@ export class ActionRegister extends Register {
     }
 
     public constructor(label: string, protected wordSize: number) { super(label) }
+}
+
+export class Memory extends Component {
+    public data = Array(this.size).fill(0) as number[]
+    public lastAssembly = null as IAssembledOutput | null
+
+    public getValue(address: number) {
+        if (address > this.data.length) throw new RangeError(`Tryied to get memory value at ${address}, but memory is ${this.size} words long`)
+        return this.data[address]
+    }
+    
+    public setValue(value: number, address: number) {
+        if (address > this.data.length) throw new RangeError(`Tryied to set memory value at ${address}, but memory is ${this.size} words long`)
+        this.data[address] = value
+    }
+
+    public loadFromAssembly(assembly: IAssembledOutput) {
+        this.data.fill(0)
+        this.data.splice(0, assembly.binOut.length, ...assembly.binOut)
+        this.lastAssembly = assembly
+    }
+
+    public constructor(label: string, protected size: number) { super(label) }
 }
