@@ -2,7 +2,10 @@
 	<div id="app" class="fill">
 		<div class="fill row">
 			<div class="col" style="flex-basis: 230px">
-				<div class="border-top">
+				<div class="border-top row">
+                    <div class="toggle">
+                        <input type="checkbox" name="clock" id="clock" v-model="clock">
+                    </div>
 					<button @click="tick">T</button>
 					<button @click="enable">E</button>
 					<button @click="disable">D</button>
@@ -42,7 +45,8 @@
 	import { IEntry } from './components/Output.vue'
 	import { IAssembledOutput, debugStatement, Statement } from 's9b-compiler'
 	import { S9BCPU } from "./CPU/s9b"
-	import "./assets/main.css"
+    import "./assets/main.css"
+    import vueInterval from "vue-interval/dist/VueInterval.common"
 
 	window.addEventListener("keydown", (event) => {
 		if (event.ctrlKey && event.code == "KeyS") event.preventDefault()
@@ -53,7 +57,8 @@
 			CodeEditor: () => import("./components/CodeEditor.vue"),
 			Output: () => import("./components/Output.vue"),
 			MemoryView: () => import("./components/MemoryView.vue")
-		}
+        },
+        mixins: [vueInterval]
 	})
 	export default class App extends Vue {
 		outputEntries: IEntry[] = []
@@ -61,6 +66,7 @@
         buildDebug = false
         showInt = false
         showRun = false
+        clock = false
 
 		log(entry: IEntry) {
 			this.outputEntries.unshift(entry)
@@ -137,7 +143,11 @@
 
 		reset() {
             this.cpu.reset()
-		}
+        }
+        
+        INTERVAL__100$tick() {
+            if (this.clock) this.tick()
+        }
 
 	}
 </script>
