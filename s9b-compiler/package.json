@@ -4,7 +4,6 @@
   "description": "Compiler for the s9b architecture",
   "main": "build/index.js",
   "scripts": {
-    "prepublish": "cp ../README.md ./README.md",
     "build": "tsc"
   },
   "repository": {
