@@ -120,7 +120,7 @@ export class S9BCPU extends CPU {
             }
             case "action": {
                 let inst = this.components.instBuffer.getValue()
-                
+
                 let registerAction = INV_REGISTER_ACTIONS[inst & ACTION_TYPE_SPAN]
 
                 if (registerAction != undefined) {
@@ -223,10 +223,10 @@ export class S9BCPU extends CPU {
                 let inst = this.components.instBuffer.getValue()
                 let dest = inst & DESTINATION_LOCATION_SPAN
                 let source = inst & SOURCE_LOCATION_SPAN
-                
+
                 let value = 0
                 let from = ""
-                
+
                 if (source == SOURCE_LOCATIONS.mem || source == SOURCE_LOCATIONS.mem$ || source == SOURCE_LOCATIONS.stack || source == SOURCE_LOCATIONS.stack$) {
                     value = this.components.memoryBuffer.getValue()
                     from = "memory buffer"
@@ -264,14 +264,14 @@ export class S9BCPU extends CPU {
                     value = this.components.bRegister.getValue()
                     from = "b"
                 }
-                
+
                 let to = ""
-                
+
                 if (dest == DESTINATION_LOCATIONS.a) {
                     this.components.aRegister.setValue(value)
                     to = "a"
                     this.state = "finish"
-                } else if (dest == DESTINATION_LOCATIONS.mem || dest == DESTINATION_LOCATIONS.mem$ || dest == DESTINATION_LOCATIONS.stack || dest == DESTINATION_LOCATIONS.stack$ ) {
+                } else if (dest == DESTINATION_LOCATIONS.mem || dest == DESTINATION_LOCATIONS.mem$ || dest == DESTINATION_LOCATIONS.stack || dest == DESTINATION_LOCATIONS.stack$) {
                     this.components.memoryBuffer.setValue(value)
                     to = "memory buffer"
                     this.state = "movement/flush"
@@ -309,15 +309,15 @@ export class S9BCPU extends CPU {
                     to = "c"
                     this.state = "finish"
                 }
-                
+
                 result.messages.push(`[RUN] Moved ${value} from ${from} to ${to}`)
-                
+
                 break
             }
             case "movement/flush": {
                 let inst = this.components.instBuffer.getValue() & SOURCE_LOCATION_SPAN
                 let dest = inst & DESTINATION_LOCATION_SPAN
-                
+
                 if (dest == DESTINATION_LOCATIONS.mem || dest == DESTINATION_LOCATIONS.mem$) {
                     let address = this.components.nRegister.getValue()
                     let value = this.components.memoryBuffer.getValue()

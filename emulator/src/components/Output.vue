@@ -1,6 +1,11 @@
 <template>
 	<div class="output">
-		<div v-for="(entry, index) in entries" :key="index" class="output-entry" v-if="allowed(entry.title)">
+		<div
+			v-for="(entry, index) in entries"
+			:key="index"
+			class="output-entry"
+			v-if="allowed(entry.title)"
+		>
 			<div class="row title">
 				<div class="grow" v-html="entry.title"></div>
 				<button
@@ -17,7 +22,7 @@
 <style>
 	.output-entry {
 		border-bottom: 1px solid #333333;
-        width: 100%;
+		width: 100%;
 	}
 
 	.output-entry > .title {
@@ -29,10 +34,10 @@
 		padding: 4px;
 	}
 
-    .output {
-        overflow: auto;
-        white-space: nowrap;
-    }
+	.output {
+		overflow: auto;
+		white-space: nowrap;
+	}
 </style>
 
 <script lang="ts">
@@ -49,13 +54,13 @@
 	@Component
 	export default class Output extends Vue {
 		@vueProp.Prop(Array)
-        readonly entries!: IEntry[]
-        
-        @vueProp.Prop(Array)
-        readonly blacklist!: string[]
+		readonly entries!: IEntry[]
 
-        allowed(title: string) {
-            return !this.blacklist.some(v=>title.includes(v))
-        }
+		@vueProp.Prop(Array)
+		readonly blacklist!: string[]
+
+		allowed(title: string) {
+			return !this.blacklist.some(v => title.includes(v))
+		}
 	}
 </script>

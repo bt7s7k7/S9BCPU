@@ -6,18 +6,18 @@
 
 <style>
 	.memory-view {
-        overflow: hidden;
-        overflow-x: scroll;
+		overflow: hidden;
+		overflow-x: scroll;
 		padding: 4px;
 	}
 
 	.memory-view-entry {
 		border-bottom: 1px solid #111111;
-    }
-    
-    .memory-view-annotation {
-        background-color: #050505;
-    }
+	}
+
+	.memory-view-annotation {
+		background-color: #050505;
+	}
 </style>
 
 <script lang="ts">
@@ -34,9 +34,9 @@
 		index = 0
 		amount = 0
 
-        mounted() {
-            this.calcHeight()
-        }
+		mounted() {
+			this.calcHeight()
+		}
 
 		public get viewValues() {
 			this.calcHeight()
@@ -53,9 +53,9 @@
 				if (statement && statement != lastStatement) {
 					ret.push(`<div class="memory-view-annotation">` + debugStatement(statement, true) + `</div>`)
 					lastStatement = statement
-                }
-                
-                var classes = [] as string[]
+				}
+
+				var classes = [] as string[]
 
 				ret.push(`<div class="${classes.join(" ")}">${`${realIndex.toString().padStart(3, "\xa0")}:`.fontcolor("grey")} ${`${v} 0x${v.toString(16)}`.fontcolor("crimson")} ${JSON.stringify(String.fromCharCode(v)).fontcolor("lightgreen")}</div>`)
 			})

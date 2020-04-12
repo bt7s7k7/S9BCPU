@@ -117,7 +117,7 @@ export function tokenize(code: string) {
 
     var pushToken = (type: TokenType) => {
         if (!matchText) throw new Error(`pushToken called without matchText being at ${line + 1}:${ch} with ${type} type`)
-        if (declareHead) { 
+        if (declareHead) {
             // In a declare heading we set name and arguments
             if (type != "macro") {
                 result.errors.push({
@@ -277,7 +277,7 @@ export function tokenize(code: string) {
     }
 
     // Test for unterminated blocks
-    if (blockComment) { 
+    if (blockComment) {
         result.errors.push({
             span: makeSpan(),
             text: `Unterminated block comment`

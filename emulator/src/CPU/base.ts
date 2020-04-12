@@ -31,7 +31,7 @@ export abstract class CPU {
         var indicator = (label: string, value: boolean) => label.fontcolor(value ? "lightgreen" : "red")
         return [
             `<div>${indicator("R", this.running)} ${indicator("S", this.skipFlag)} ${indicator("Z", this.zeroFlag)} ${indicator("C", this.carryFlag)} ${this.state.fontcolor("grey")}</div>`,
-            ...Object.values(this.components).map(v=>v.getInfo())
+            ...Object.values(this.components).map(v => v.getInfo())
         ].join("\n")
     }
 
@@ -54,7 +54,7 @@ export class Register extends Component {
         this.lastState = "W".fontcolor("cyan")
         this.value = value
     }
-    
+
     public getValue() {
         this.lastState = "R".fontcolor("orange")
         return this.value
@@ -73,7 +73,7 @@ export class Combinator extends Component {
     public constructor(label: string, protected wordSize: number, protected a: string, protected b: string, protected operation: (a: number, b: number) => number, protected shouldSetFlags = false) {
         super(label)
     }
-    public getValue(cpu: CPU) { 
+    public getValue(cpu: CPU) {
         this.lastState = "R".fontcolor("orange")
         var aReg = cpu.components[this.a] as Register
         var bReg = cpu.components[this.b] as Register
@@ -121,7 +121,7 @@ export class ActionRegister extends Register {
             this.value = this.value & (this.wordSize - 1)
         }
     }
-    
+
     public shiftRight() {
         this.value <<= 1
         this.lastState = "<".fontcolor("lightgreen")
@@ -141,7 +141,7 @@ export class Memory extends Component {
         if (address > this.data.length) throw new RangeError(`Tryied to get memory value at ${address}, but memory is ${this.size} words long`)
         return this.data[address]
     }
-    
+
     public setValue(value: number, address: number) {
         if (address > this.data.length) throw new RangeError(`Tryied to set memory value at ${address}, but memory is ${this.size} words long`)
         this.data[address] = value

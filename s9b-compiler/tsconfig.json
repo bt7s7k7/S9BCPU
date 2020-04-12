@@ -4,7 +4,9 @@
         "target": "ES6",
         "sourceMap": true,
         "declaration": true,
-        "lib": [ "ESNext" ],
+        "lib": [
+            "ESNext"
+        ],
         "module": "CommonJS",
         "outDir": "build",
         "strict": true

@@ -98,7 +98,7 @@ export function expandMacros(tokens: IToken[], scope: IMacroScope, annotations: 
         }
 
         // Write the macro signature in the annotations, also check if we didn't do that already
-        if (args.length > 0 && !(`${position.from.line}:${position.from.ch}` in annotations)) { 
+        if (args.length > 0 && !(`${position.from.line}:${position.from.ch}` in annotations)) {
             result.annotations.push(annotations[`${position.from.line}:${position.from.ch}`] = {
                 span: position,
                 text: `${macro.name}(${macro.arguments.join(", ")})`
