@@ -70,11 +70,11 @@ button:active {
 
 button::before {
     text-align: left;
-    content: "[ ";
+    content: "[";
 }
 
 button::after {
-    content: " ]";
+    content: "]";
 }
 
 .cpu-info > * {
@@ -87,6 +87,7 @@ button::after {
 
 .toggle {
     color: white;
+    user-select: none;
 }
 
 .toggle:focus {
@@ -106,6 +107,7 @@ input[type="checkbox"] {
     color: inherit;
     appearance: none;
     font-family: 'Courier New', Courier, monospace;
+    outline: none;
 }
 
 input[type="checkbox"]::before {

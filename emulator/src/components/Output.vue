@@ -1,6 +1,6 @@
 <template>
 	<div class="output">
-		<div v-for="(entry, index) in entries" :key="index" class="output-entry">
+		<div v-for="(entry, index) in entries" :key="index" class="output-entry" v-if="allowed(entry.title)">
 			<div class="row title">
 				<div class="grow" v-html="entry.title"></div>
 				<button
@@ -49,6 +49,13 @@
 	@Component
 	export default class Output extends Vue {
 		@vueProp.Prop(Array)
-		readonly entries!: IEntry[]
+        readonly entries!: IEntry[]
+        
+        @vueProp.Prop(Array)
+        readonly blacklist!: string[]
+
+        allowed(title: string) {
+            return !this.blacklist.some(v=>title.includes(v))
+        }
 	}
 </script>

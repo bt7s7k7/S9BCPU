@@ -22,7 +22,7 @@ export abstract class CPU {
     public skipFlag = false
     public zeroFlag = false
     public carryFlag = false
-    public state = "bootstrap"
+    public state = "reset"
     public components = {} as Record<string, Component>
 
     public abstract tick(): IExecutionResult
@@ -33,6 +33,12 @@ export abstract class CPU {
             `<div>${indicator("R", this.running)} ${indicator("S", this.skipFlag)} ${indicator("Z", this.zeroFlag)} ${indicator("C", this.carryFlag)} ${this.state.fontcolor("grey")}</div>`,
             ...Object.values(this.components).map(v=>v.getInfo())
         ].join("\n")
+    }
+
+    public reset() {
+        this.state = "reset"
+        this.running = true
+        this.skipFlag = false
     }
 }
 
@@ -64,7 +70,7 @@ export class Register extends Component {
 export class Combinator extends Component {
     public labelColor = "skyblue"
 
-    public constructor(label: string, protected wordSize: number, protected a: string, protected b: string, protected operation: (a: number, b: number) => number) {
+    public constructor(label: string, protected wordSize: number, protected a: string, protected b: string, protected operation: (a: number, b: number) => number, protected shouldSetFlags = false) {
         super(label)
     }
     public getValue(cpu: CPU) { 

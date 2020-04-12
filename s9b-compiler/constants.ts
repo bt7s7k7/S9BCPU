@@ -1,4 +1,3 @@
-
 export const CONDITION_OR = 0b001000000
 export const CONDITION_INVERT = 0b000100000
 
@@ -52,6 +51,14 @@ export const DESTINATION_LOCATIONS = {
     mem$: 1
 } as const
 
+export const SOURCE_LOCATION_SPAN = 0b011110000
+
+export const DESTINATION_LOCATION_SPAN = 0b000001111
+
+export const INV_SOURCE_LOCATION = Object.entries(SOURCE_LOCATIONS).reduce((o, v) => (o[v[1]] = v[0], o), {} as Record<number, string>)
+
+export const INV_DESTINATION_LOCATION = Object.entries(DESTINATION_LOCATIONS).reduce((o, v) => (o[v[1]] = v[0], o), {} as Record<number, string>)
+
 export const VALID_LOCATIONS = [...new Set([...Object.keys(SOURCE_LOCATIONS), ...Object.keys(DESTINATION_LOCATIONS)].map(v => v.replace(/\$/g, "")))]
 
 export const ACTIONS = {
@@ -61,6 +68,8 @@ export const ACTIONS = {
     pop: 24
 } as const
 
+export const INV_ACTIONS = Object.entries(ACTIONS).reduce((o, v) => (o[v[1]] = v[0], o), {} as Record<number, string>) as Record<number, keyof typeof ACTIONS>
+
 export const REGISTER_ACTIONS = {
     "!": 12,
     "+": 4,
@@ -69,11 +78,18 @@ export const REGISTER_ACTIONS = {
     ">": 20
 } as const
 
+export const INV_REGISTER_ACTIONS = Object.entries(REGISTER_ACTIONS).reduce((o, v) => (o[v[1]] = v[0], o), {} as Record<number, string>) as Record<number, keyof typeof REGISTER_ACTIONS>
+
 export const REGISTER_ACTION_REGISTERS = {
     a: 0,
     b: 1,
     c: 2,
     d: 3
 } as const
+
+export const INV_REGISTER_ACTION_REGISTERS = Object.entries(REGISTER_ACTION_REGISTERS).reduce((o, v) => (o[v[1]] = v[0], o), {} as Record<number, string>) as Record<number, keyof typeof REGISTER_ACTION_REGISTERS>
+
+export const ACTION_TYPE_SPAN = 0b000111100
+export const ACTION_TARGET_SPAN = 0b000000011
 
 export const VALID_ACTIONS = Object.keys(ACTIONS)

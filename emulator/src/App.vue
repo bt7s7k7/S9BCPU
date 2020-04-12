@@ -1,18 +1,32 @@
 <template>
 	<div id="app" class="fill">
 		<div class="fill row">
-			<div class="col">
+			<div class="col" style="flex-basis: 230px">
+				<div class="border-top">
+					<button @click="tick">T</button>
+					<button @click="enable">E</button>
+					<button @click="disable">D</button>
+					<button @click="reset">R</button>
+				</div>
 				<div style="flex-basis: 200px" class="cpu-info" v-html="cpuInfo"></div>
-                <MemoryView class="grow border-top contain" :memory="cpu.components.memory"></MemoryView>
+				<MemoryView class="grow border-top contain" :memory="cpu.components.memory"></MemoryView>
 			</div>
 			<div class="grow row border-left">
 				<CodeEditor class="grow relative contain" @build="onBuild($event)"></CodeEditor>
 				<div class="border-left col grow contain">
-					<Output class="grow border-top" :entries="outputEntries"></Output>
-					<div>
+					<Output class="grow border-top" :entries="outputEntries" :blacklist="blacklist"></Output>
+					<div class="row">
 						<div class="toggle">
 							<input type="checkbox" v-model="buildDebug" name="buildDebug" id="buildDebug" />
-							<label for="buildDebug" @mousedown.prevent>Build Debug Info</label>
+							<label for="buildDebug">Debug Info</label>
+						</div>
+						<div class="toggle">
+							<input type="checkbox" v-model="showInt" name="showInt" id="showInt" />
+							<label for="showInt">Intermediate</label>
+						</div>
+						<div class="toggle">
+							<input type="checkbox" v-model="showRun" name="showRun" id="showRun" />
+							<label for="showRun">Runtime</label>
 						</div>
 					</div>
 				</div>
@@ -44,7 +58,9 @@
 	export default class App extends Vue {
 		outputEntries: IEntry[] = []
 		cpu = new S9BCPU(2 ** 9)
-		buildDebug = false
+        buildDebug = false
+        showInt = false
+        showRun = false
 
 		log(entry: IEntry) {
 			this.outputEntries.unshift(entry)
@@ -74,9 +90,53 @@
 			}
 		}
 
+        mounted() {
+            this.showInt = localStorage.getItem("s9b-showInt") == "true"
+            this.showRun = localStorage.getItem("s9b-showRun") == "true"
+            this.buildDebug = localStorage.getItem("s9b-buildDebug") == "true"
+        }
+
+        @vueProp.Watch("buildDebug")
+        onBuildDebugChange() {
+            localStorage.setItem("s9b-buildDebug", this.buildDebug ? "true" : "false")
+        }
+
+        @vueProp.Watch("showInt")
+        onShowIntChange() {
+            localStorage.setItem("s9b-showInt", this.showInt ? "true" : "false")
+        }
+
+        @vueProp.Watch("showRun")
+        onShowRunChange() {
+            localStorage.setItem("s9b-showRun", this.showRun ? "true" : "false")
+        }
 
 		public get cpuInfo(): string {
 			return this.cpu.getInfo()
+        }
+        
+        public get blacklist() {
+            var ret = [] as string[]
+            if (!this.showInt) ret.push("[INT]")
+            if (!this.showRun) ret.push("[RUN]")
+            return ret
+        }
+
+		tick() {
+			var result = this.cpu.tick()
+			result.messages.forEach(v => this.log({ title: v, actions: [] }))
+		}
+
+		enable() {
+            this.cpu.running = true
+		}
+
+		disable() {
+            this.cpu.running = false
+		}
+
+		reset() {
+            this.cpu.reset()
 		}
 
 	}
