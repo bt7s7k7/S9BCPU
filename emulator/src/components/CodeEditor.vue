@@ -33,6 +33,10 @@
 		border-color: #333333;
 		color: #aaaaaa;
 	}
+
+	.code-editor-current-line {
+		background-color: yellow;
+	}
 </style>
 
 <script lang="ts">
@@ -51,6 +55,9 @@
 	export default class CodeEditor extends Vue {
 		editor!: EditorFromTextArea
 		code: string = localStorage["s9bcpu-code"] || ""
+		@vueProp.Prop(Number)
+		readonly line!: number
+		lastLinenumber = null as Element | null
 
 		mounted() {
 			const editorArea = this.$refs.editorArea as HTMLTextAreaElement
@@ -102,6 +109,18 @@
 
 		build() {
 			this.$emit("build", assemble(this.code))
+		}
+
+		@vueProp.Watch("line")
+		onLineChanged() {
+			if (this.lastLinenumber) this.lastLinenumber.classList.remove("code-editor-current-line")
+			if (this.line >= 0) {
+				var lineNumber = document.querySelector(`.CodeMirror-code`)?.children[this.line]?.children[0]?.children[0]
+				if (lineNumber) {
+					lineNumber.classList.add("code-editor-current-line")
+					this.lastLinenumber = lineNumber
+				}
+			}
 		}
 	}
 </script>

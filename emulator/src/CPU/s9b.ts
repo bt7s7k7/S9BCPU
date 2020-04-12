@@ -298,10 +298,11 @@ export class S9BCPU extends CPU {
                 } else if (dest == DESTINATION_LOCATIONS.push) {
                     this.components.memoryBuffer.setValue(value)
                     this.components.stackRegister.decrement()
+                    this.components.nRegister.reset()
                     to = "memory buffer and stack++"
                     this.state = "movement/flush"
                 } else if (dest == DESTINATION_LOCATIONS.out) {
-                    result.messages.push(`<b>[OUT] Output ${value}</b>`.fontcolor("yellow"))
+                    result.messages.push(`<b>[OUT] Output ${value.toString().padStart(3, "\xa0")} ${value.toString(2).padStart(9, "0").replace(/1/g, "\u2588").replace(/0/g, "\xa0")}</b>`.fontcolor("yellow"))
                     to = "debug out"
                     this.state = "finish"
                 } else if (dest == DESTINATION_LOCATIONS.c) {
@@ -321,12 +322,12 @@ export class S9BCPU extends CPU {
                 if (dest == DESTINATION_LOCATIONS.mem || dest == DESTINATION_LOCATIONS.mem$) {
                     let address = this.components.nRegister.getValue()
                     let value = this.components.memoryBuffer.getValue()
-                    this.components.memory.setValue(address, value)
+                    this.components.memory.setValue(value, address)
                     result.messages.push(`[INT] Saved value ${value} into ${address}`.fontcolor("grey"))
                 } else {
                     let address = this.components.stackWriteAddress.getValue(this)
                     let value = this.components.memoryBuffer.getValue()
-                    this.components.memory.setValue(address, value)
+                    this.components.memory.setValue(value, address)
                     result.messages.push(`[INT] Saved value ${value} into stack at ${address}`.fontcolor("grey"))
                 }
 

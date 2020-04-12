@@ -25,6 +25,8 @@ export function assemble(code: string) {
         lookup: {}
     } as IAssembledOutput
 
+    if (result.errors.length > 0) return result
+
     var toLink: { address: number, statement: Statement }[] = []
     var namedData: Record<string, Statements.IConstantStatement> = {}
     let address = result.binOut.length
@@ -50,7 +52,7 @@ export function assemble(code: string) {
             pushInstr(INST_TYPE.movement | SOURCE_LOCATIONS[statement.from] | DESTINATION_LOCATIONS[statement.to], statement)
 
             if (statement.fromLiteral) {
-                if (!statement.fromLiteral.value) throw new Error("Statement from literal value not set")
+                if (statement.fromLiteral.value == null) throw new Error("Statement from literal value not set")
                 if (typeof statement.fromLiteral.value == "number") {
                     pushInstr(statement.fromLiteral.value, statement)
                 } else {
@@ -60,7 +62,7 @@ export function assemble(code: string) {
             }
 
             if (statement.toLiteral) {
-                if (!statement.toLiteral.value) throw new Error("Statement to literal value not set")
+                if (statement.toLiteral.value == null) throw new Error("Statement to literal value not set")
                 if (typeof statement.toLiteral.value == "number") {
                     pushInstr(statement.toLiteral.value, statement)
                 } else {
@@ -102,7 +104,7 @@ export function assemble(code: string) {
             result.binOut[curr.address] = target
         } else {
             let target = result.instructions.get(curr.statement)
-            if (!target) throw new Error("Invalid statement set for linking")
+            if (target == undefined) throw new Error("Statement set for linking is not in instructions: Map<Statement, number>")
             result.binOut[curr.address] = target
         }
     }

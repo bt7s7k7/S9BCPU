@@ -47,7 +47,7 @@ export interface IExecutionResult {
 }
 
 export class Register extends Component {
-    protected value = 0
+    public value = 0
     protected labelColor = "lightgreen"
 
     public setValue(value: number) {

@@ -256,14 +256,13 @@ export function parse(code: string) {
             let action = token.text[0] as keyof typeof REGISTER_ACTIONS
             let target = token.text[1] as keyof typeof REGISTER_ACTION_REGISTERS
 
-            result.statements.push({
+            pushStatement({
                 type: "registerAction",
                 action,
-                label: nextLabel,
                 span: token.span,
-                target
+                target,
+                label: null
             })
-            nextLabel = null
         } else if (token.type == "condition") { // Conditions
             // Remove leading "?"
             let text = token.text.substr(1)

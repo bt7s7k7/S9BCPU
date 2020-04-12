@@ -29,8 +29,10 @@
 
 	@Component
 	export default class MemoryView extends Vue {
-		@vueProp.Prop()
+		@vueProp.Prop(Object)
 		readonly memory!: Memory;
+		@vueProp.Prop(Number)
+		readonly stackPtr!: number;
 		index = 0
 		amount = 0
 
@@ -57,7 +59,13 @@
 
 				var classes = [] as string[]
 
-				ret.push(`<div class="${classes.join(" ")}">${`${realIndex.toString().padStart(3, "\xa0")}:`.fontcolor("grey")} ${`${v} 0x${v.toString(16)}`.fontcolor("crimson")} ${JSON.stringify(String.fromCharCode(v)).fontcolor("lightgreen")}</div>`)
+				ret.push(`<div class="${classes.join(" ")}">${
+					`${realIndex.toString().padStart(3, "\xa0")}:`.fontcolor("grey")
+					} ${
+					`${v} 0x${v.toString(16)}`.fontcolor("crimson")
+					} ${
+					JSON.stringify(String.fromCharCode(v)).fontcolor("lightgreen")
+					} ${realIndex == this.stackPtr ? "<".fontcolor("cyan") : ""}</div>`)
 			})
 
 			return ret
