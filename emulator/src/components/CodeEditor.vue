@@ -3,8 +3,23 @@
 		<div class="col grow">
 			<textarea style="resizable: none" ref="editorArea"></textarea>
 		</div>
-		<div>
+		<div class="row">
 			<button @click="build()">Build</button>
+			<button
+				@click="showExamples = true"
+				class="relative"
+				style="width: 100px"
+				@mouseleave="showExamples = false"
+			>
+				<span>Examples</span>
+				<div class="examples col" v-if="showExamples">
+					<button
+						v-for="(example, index) in examples"
+						:key="index"
+						@click="code = example.code"
+					>{{ example.label }}</button>
+				</div>
+			</button>
 		</div>
 	</div>
 </template>
@@ -37,6 +52,15 @@
 	.code-editor-current-line {
 		background-color: yellow;
 	}
+
+	.examples {
+		position: absolute;
+		left: 0;
+		bottom: 19px;
+		height: auto;
+		border: 1px solid #212121;
+		background-color: #111111;
+	}
 </style>
 
 <script lang="ts">
@@ -50,6 +74,7 @@
 	import "codemirror/theme/material-darker.css"
 	import "codemirror/lib/codemirror.css"
 	import { assemble } from 's9b-compiler'
+	import { EXAMPLES } from "../examples"
 
 	@Component
 	export default class CodeEditor extends Vue {
@@ -58,6 +83,8 @@
 		@vueProp.Prop(Number)
 		readonly line!: number
 		lastLinenumber = null as Element | null
+		showExamples = false
+		examples = EXAMPLES
 
 		mounted() {
 			const editorArea = this.$refs.editorArea as HTMLTextAreaElement
