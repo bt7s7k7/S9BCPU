@@ -316,7 +316,7 @@ export class S9BCPU extends CPU {
                 break
             }
             case "movement/flush": {
-                let inst = this.components.instBuffer.getValue() & SOURCE_LOCATION_SPAN
+                let inst = this.components.instBuffer.getValue()
                 let dest = inst & DESTINATION_LOCATION_SPAN
 
                 if (dest == DESTINATION_LOCATIONS.mem || dest == DESTINATION_LOCATIONS.mem$) {
