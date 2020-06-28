@@ -3,13 +3,26 @@
 		<div class="fill row">
 			<div class="col" style="flex-basis: 230px">
 				<div class="border-top row">
-					<div class="toggle">
-						<input type="checkbox" name="clock" id="clock" v-model="clock" />
-					</div>
 					<button @click="tick">T</button>
 					<button @click="enable">E</button>
 					<button @click="disable">D</button>
 					<button @click="reset">R</button>
+					<div class="toggle">
+						<input type="checkbox" name="clock" id="clock" v-model="clock" />
+					</div>
+					<div>
+						<button v-if="clockLevel == 0" @click="clockLevel = 1">
+							<span class="green">></span>
+							<span class="white">>></span>
+						</button>
+						<button v-if="clockLevel == 1" @click="clockLevel = 2">
+							<span class="green">>></span>
+							<span class="white">></span>
+						</button>
+						<button v-if="clockLevel == 2" @click="clockLevel = 0">
+							<span class="green">>>></span>
+						</button>
+					</div>
 				</div>
 				<div style="flex-basis: 200px" class="cpu-info" v-html="cpuInfo"></div>
 				<MemoryView
@@ -73,6 +86,11 @@
 		showInt = false
 		showRun = false
 		clock = false
+		clockLevel = 0
+		clockLevels = [100, 10, 1]
+		lastClockTick = Date.now()
+
+		get tickPeriod() { return this.clockLevels[this.clockLevel] }
 
 		log(entry: IEntry) {
 			this.outputEntries.unshift(entry)
@@ -153,8 +171,13 @@
 			this.cpu.reset()
 		}
 
-		INTERVAL__100$tick() {
-			if (this.clock) this.tick()
+		INTERVAL__1$tick() {
+			if (this.clock) {
+				if (Date.now() - this.lastClockTick > this.tickPeriod) {
+					this.tick()
+					this.lastClockTick = Date.now()
+				}
+			}
 		}
 
 

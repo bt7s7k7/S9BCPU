@@ -121,3 +121,11 @@ input[type="checkbox"]:checked::before {
 input[type="checkbox"]::after {
     content: "]";
 }
+
+.green {
+    color: lightgreen
+}
+
+.white {
+    color: white;
+}
