@@ -64,5 +64,39 @@ notOne:
     RETURN
     #pop
     `
+    },
+    {
+        label: "Division",
+        code: `
+loopNum: [9]
+
+// -- MAIN --
+    b = 12  // Divisor
+    d = 189 // Divident
+    a = 0   // Remainder
+    
+    c = 0   // Temp
+loop:
+    // (a,d) << 1
+    <a 
+    <d
+    ?C +a // Rotate carry from d to a
+    
+    c = sub          // Temp = Remainder - Divisor
+    ?C pc = :subFail // If !Carry
+    a = c            // Remainer = Temp
+    +d               // Divident++
+subFail:
+    
+    // loopNum--; while loopNum != 0 goto :loop 
+    c = mem :loopNum
+    -c
+    mem :loopNum = c
+    ?!c pc = :loop
+    
+    out = d // Result
+    out = a // Remainder
+    !done
+        `
     }
-] as {label: string, code: string}[]
+] as { label: string, code: string }[]
