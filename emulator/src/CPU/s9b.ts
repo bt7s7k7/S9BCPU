@@ -241,7 +241,7 @@ export class S9BCPU extends CPU {
                     from = "c"
                 } else if (source == SOURCE_LOCATIONS.d) {
                     from = "d"
-                    value = this.components.cRegister.getValue()
+                    value = this.components.dRegister.getValue()
                 } else if (source == SOURCE_LOCATIONS.and) {
                     value = this.components.and.getValue(this)
                     from = "and"
