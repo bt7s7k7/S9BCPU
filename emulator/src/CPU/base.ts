@@ -94,37 +94,47 @@ export class Combinator extends Component {
 export class ActionRegister extends Register {
     public labelColor = "lightsalmon"
 
-    public increment() {
+    public increment(cpu: CPU | null) {
         this.value++
         this.lastState = "+".fontcolor("lightgreen")
+        if (cpu != null) cpu.carryFlag = false
         if (this.value >= this.wordSize) {
             this.value = this.value & (this.wordSize - 1)
+            if (cpu != null) cpu.carryFlag = true
         }
     }
 
-    public decrement() {
+    public decrement(cpu: CPU | null) {
         this.value--
         this.lastState = "-".fontcolor("lightgreen")
+        if (cpu != null) cpu.carryFlag = false
         if (this.value <= 0) {
+            if (cpu != null) cpu.carryFlag = true
             this.value = this.value & (this.wordSize - 1)
         }
     }
 
-    public invert() {
-        this.value = ~this.value
+    public invert(cpu: CPU | null) {
+        this.value = ~this.value & (this.wordSize - 1)
     }
 
-    public shiftLeft() {
+    public shiftLeft(cpu: CPU | null) {
         this.value <<= 1
         this.lastState = "<".fontcolor("lightgreen")
+        if (cpu != null) cpu.carryFlag = false
         if (this.value >= this.wordSize) {
             this.value = this.value & (this.wordSize - 1)
+            if (cpu != null) cpu.carryFlag = true
         }
     }
 
-    public shiftRight() {
-        this.value <<= 1
-        this.lastState = "<".fontcolor("lightgreen")
+    public shiftRight(cpu: CPU | null) {
+        if (cpu != null) cpu.carryFlag = false
+        if ((this.value & 1) == 1) {
+            if (cpu != null) cpu.carryFlag = true
+        }
+        this.value >>= 1
+        this.lastState = ">".fontcolor("lightgreen")
         if (this.value >= this.wordSize) {
             this.value = this.value & (this.wordSize - 1)
         }

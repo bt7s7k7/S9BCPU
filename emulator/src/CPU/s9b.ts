@@ -1,5 +1,5 @@
-import { CPU, IExecutionResult, Register, ActionRegister, Combinator, Memory, Component } from "./base"
-import { INST_TYPE, SOURCE_LOCATION_SPAN, INV_SOURCE_LOCATION, DESTINATION_LOCATION_SPAN, INV_DESTINATION_LOCATION, CONDITION_OR, CONDITION_INVERT, CONDITION_TARGETS, REGISTER_ACTIONS, ACTION_TYPE_SPAN, INV_ACTIONS, ACTION_TARGET_SPAN, INV_REGISTER_ACTIONS, INV_REGISTER_ACTION_REGISTERS, SOURCE_LOCATIONS, DESTINATION_LOCATIONS } from 's9b-compiler'
+import { ACTION_TARGET_SPAN, ACTION_TYPE_SPAN, CONDITION_INVERT, CONDITION_OR, CONDITION_TARGETS, DESTINATION_LOCATIONS, DESTINATION_LOCATION_SPAN, INST_TYPE, INV_ACTIONS, INV_DESTINATION_LOCATION, INV_REGISTER_ACTIONS, INV_REGISTER_ACTION_REGISTERS, INV_SOURCE_LOCATION, SOURCE_LOCATIONS, SOURCE_LOCATION_SPAN } from 's9b-compiler'
+import { ActionRegister, Combinator, Component, CPU, IExecutionResult, Memory, Register } from "./base"
 
 export class S9BCPU extends CPU {
     public components = {
@@ -86,12 +86,12 @@ export class S9BCPU extends CPU {
                 break
             }
             case "skip2": {
-                this.components.pc.increment()
+                this.components.pc.increment(null)
                 this.state = "skip1"
                 break
             }
             case "skip1": {
-                this.components.pc.increment()
+                this.components.pc.increment(null)
                 this.state = "finish"
                 break
             }
@@ -127,11 +127,11 @@ export class S9BCPU extends CPU {
                     let target = INV_REGISTER_ACTION_REGISTERS[inst & ACTION_TARGET_SPAN]
                     let targetObject = (this.components as Record<string, Component>)[target + "Register"] as ActionRegister
 
-                    if (registerAction == "!") targetObject.invert()
-                    if (registerAction == "+") targetObject.increment()
-                    if (registerAction == "-") targetObject.decrement()
-                    if (registerAction == "<") targetObject.shiftLeft()
-                    if (registerAction == ">") targetObject.shiftRight()
+                    if (registerAction == "!") targetObject.invert(this)
+                    if (registerAction == "+") targetObject.increment(this)
+                    if (registerAction == "-") targetObject.decrement(this)
+                    if (registerAction == "<") targetObject.shiftLeft(this)
+                    if (registerAction == ">") targetObject.shiftRight(this)
 
                     result.messages.push(`[RUN] ${registerAction + target}`)
                 } else {
@@ -151,7 +151,7 @@ export class S9BCPU extends CPU {
                         this.state = "halted"
                         result.messages.push("[OUT] Halted")
                     } else if (action == "pop") {
-                        this.components.stackRegister.increment()
+                        this.components.stackRegister.increment(null)
                         this.state = "finish"
                         result.messages.push("[RUN] Popped stack")
                     }
@@ -174,7 +174,7 @@ export class S9BCPU extends CPU {
                 break
             }
             case "movement/inp_arg": {
-                this.components.pc.increment()
+                this.components.pc.increment(null)
                 this.state = "movement/inp_arg+1"
                 result.messages.push("[INT] Loading input argument".fontcolor("grey"))
                 break
@@ -190,7 +190,7 @@ export class S9BCPU extends CPU {
                 break
             }
             case "movement/out_arg": {
-                this.components.pc.increment()
+                this.components.pc.increment(null)
                 this.state = "movement/out_arg+1"
                 result.messages.push("[INT] Loading output argument".fontcolor("grey"))
                 break
@@ -297,7 +297,7 @@ export class S9BCPU extends CPU {
                     this.state = "fetch"
                 } else if (dest == DESTINATION_LOCATIONS.push) {
                     this.components.memoryBuffer.setValue(value)
-                    this.components.stackRegister.decrement()
+                    this.components.stackRegister.decrement(null)
                     this.components.nRegister.reset()
                     to = "memory buffer and stack++"
                     this.state = "movement/flush"
@@ -335,7 +335,7 @@ export class S9BCPU extends CPU {
                 break
             }
             case "finish": {
-                this.components.pc.increment()
+                this.components.pc.increment(null)
                 this.state = "fetch"
                 break
             }
